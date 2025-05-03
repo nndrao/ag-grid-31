@@ -22,6 +22,16 @@
 - Incrementally implement dialogs and connect to toolbar buttons
 - Gradually move state management to the Zustand store
 
+### 0.4 UI Component and Styling Guidelines
+- **Component Library**: Use only ShadCN UI components for all interface elements
+- **Theming**: Utilize the default ShadCN theme system without custom CSS files
+- **Styling**: Apply only Tailwind CSS classes for all styling needs
+- **Custom Components**: Any custom UI components should follow ShadCN compositional patterns
+- **Consistency**: Maintain visual consistency with the rest of the application
+- **Dark/Light Mode**: Ensure all components properly respond to theme changes
+- **No Direct CSS**: Avoid direct CSS files or inline styles; use Tailwind exclusively
+- **Accessibility**: Leverage ShadCN's built-in accessibility features
+
 ## 1. Project Setup and Architecture (Phase 1)
 
 ### 1.1 State Management Setup
@@ -352,6 +362,45 @@
 - Usage examples
 - Configuration guide
 - Customization documentation
+
+## 10. Development Workflow and Branching Strategy
+
+### 10.1 Branching Structure
+- **main**: Production-ready code, always in a deployable state
+- **develop**: Integration branch for feature development
+- **feature/[feature-name]**: Individual feature branches
+- **release/[version]**: Release candidate branches
+- **hotfix/[issue]**: Emergency fixes for production
+
+### 10.2 Feature Branch Workflow
+1. Create a feature branch for each component/feature from the develop branch
+   - Example: `feature/toolbar-profiles`, `feature/column-dialog`, etc.
+2. Follow the phase order from the implementation plan
+3. Implement one feature at a time with its associated tests
+4. Create pull requests to merge completed features into develop
+5. Perform code reviews before merging
+
+### 10.3 Merging Guidelines
+- Features must have unit tests with adequate coverage
+- All tests must pass before merging
+- Code must be reviewed by at least one team member
+- Documentation must be updated for the feature
+- Manual testing of the feature must be completed
+
+### 10.4 Release Process
+1. Create a release branch from develop when a set of features is complete
+2. Perform final integration testing on the release branch
+3. Fix any issues directly in the release branch
+4. Merge release branch to main and tag with version number
+5. Merge release branch back to develop
+
+### 10.5 Alignment with Implementation Phases
+- Create feature branches that align with the phases in the implementation plan
+- Group related features within the same phase when appropriate
+- Prioritize core functionality before advanced features
+- Consider dependencies between features when planning branch creation
+
+This branching strategy ensures organized, incremental development while maintaining a stable codebase. It allows team members to work on different features in parallel without interference and provides clear points for integration and testing.
 
 ## Development Timeline Estimates
 
