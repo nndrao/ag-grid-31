@@ -1,0 +1,279 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Cursor AI Project Rules: AG Grid Enterprise v33.2.0 Implementation
+
+## Dependencies
+
+```
+"dependencies": {
+  "ag-grid-react": "33.2.0",
+  "ag-grid-community": "33.2.0",
+  "ag-grid-enterprise": "33.2.0",
+  "ag-charts-enterprise": "11.0.0" // Only if using Integrated Charts or Sparklines
+}
+```
+
+## License Setup
+
+- Always configure the license key before rendering any grid component
+- Place license initialization in the entry point file
+
+```javascript
+import { LicenseManager } from 'ag-grid-enterprise';
+LicenseManager.setLicenseKey('your-license-key');
+```
+
+## Module Registration
+
+- Use the new modular architecture to reduce bundle size (20-40% smaller)
+- Register modules before rendering any grid
+- DO NOT use deprecated module packages (e.g., @ag-grid-community/*, @ag-grid-enterprise/*)
+- Only include modules required for the features you need
+
+### Basic Module Registration (Default Option)
+
+```javascript
+import { ModuleRegistry } from 'ag-grid-community';
+import { AllEnterpriseModule } from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([AllEnterpriseModule]);
+```
+
+### Optimized Module Registration (Preferred for Production)
+
+```javascript
+import { ModuleRegistry } from 'ag-grid-community';
+import {
+  ClientSideRowModelModule,
+  // Add only needed Community modules...
+} from 'ag-grid-community';
+import {
+  RowGroupingModule,
+  ExcelExportModule,
+  // Add only needed Enterprise modules...
+} from 'ag-grid-enterprise';
+
+ModuleRegistry.registerModules([
+  ClientSideRowModelModule,
+  RowGroupingModule,
+  ExcelExportModule
+  // Add only what you need
+]);
+```
+
+### Required Modules Per Feature
+
+- Row Grouping: `RowGroupingModule`
+- Excel Export: `ExcelExportModule` (also include `CsvExportModule`)
+- Master Detail: `MasterDetailModule`
+- Server-Side Processing: `ServerSideRowModelModule`
+- Integrated Charts: `IntegratedChartsModule` + `AgChartsEnterpriseModule`
+- Find Feature: `FindFeatureModule`
+- Cell Selection: `CellSelectionModule`
+- Set Filter: `SetFilterModule` 
+- Status Bar: `StatusBarModule`
+
+## Theming
+
+- AG Grid v33.2.0 uses the Theming API by default
+- DO NOT mix CSS imports and Theming API in the same app
+- Include ValidationModule only in development
+
+### Using the Default Theming API
+
+```javascript
+import { themeQuartz } from 'ag-grid-community';
+
+// Create custom theme
+const myTheme = themeQuartz.withParams({
+  // Theme parameters
+  spacing: 8,
+  headerBackgroundColor: '#2c3e50'
+  // ...other parameters
+});
+
+// Apply the theme
+<AgGridReact
+  theme={myTheme}
+  // ...other props
+/>
+```
+
+### Using Legacy CSS (Not Recommended)
+
+```javascript
+// Import CSS
+import 'ag-grid-community/styles/ag-grid.css';
+import 'ag-grid-community/styles/ag-theme-alpine.css';
+
+// Apply legacy theme
+<div className="ag-theme-alpine">
+  <AgGridReact
+    theme="legacy"
+    // ...other props
+  />
+</div>
+```
+
+## Essential Grid Configuration
+
+```jsx
+<AgGridReact
+  // Data sources
+  rowData={rowData}
+  columnDefs={columnDefs}
+  
+  // Basic features
+  pagination={true}
+  rowSelection="multiple"
+  
+  // Enterprise features
+  rowGroupPanelShow="always"
+  enableRangeSelection={true}
+  
+  // Theme (default is quartz in v33.2.0)
+  // theme={myCustomTheme}
+/>
+```
+
+## New v33.2.0 Features
+
+### Find Feature
+
+```jsx
+<AgGridReact
+  enableFindFeature={true}
+  findOptions={{
+    searchOption: 'contains',
+    caseSensitive: false,
+    matchWholeWord: false,
+    highlightMatches: true
+  }}
+/>
+```
+
+### Tree Data with Self-Referencing Records
+
+```jsx
+<AgGridReact
+  treeData={true}
+  getDataPath={data => {
+    // Path creation logic for hierarchy
+    const result = [];
+    let current = data;
+    while (current) {
+      result.unshift(current.name);
+      // Find parent logic
+      current = current.parentId ? findParent(current.parentId) : null;
+    }
+    return result;
+  }}
+  autoGroupColumnDef={{
+    headerName: 'Hierarchy',
+    minWidth: 250
+  }}
+/>
+```
+
+### Status Bar with Value Formatting
+
+```jsx
+<AgGridReact
+  statusBar={{
+    statusPanels: [
+      {
+        statusPanel: 'agTotalAndFilteredRowCountComponent',
+        valueFormatter: params => `Total: ${params.value.toLocaleString()}`
+      },
+      {
+        statusPanel: 'agAggregationComponent',
+        valueFormatter: params => params.column?.getColId() === 'price' 
+          ? `$${params.value.toFixed(2)}` 
+          : params.value
+      }
+    ]
+  }}
+/>
+```
+
+### Row Spanning with Pagination
+
+```jsx
+<AgGridReact
+  pagination={true}
+  suppressRowTransform={false} // Required for row spanning with pagination
+  columnDefs={[
+    {
+      field: 'category',
+      rowSpan: params => {
+        // Row span logic
+        return computeRowSpan(params);
+      }
+    },
+    // Other columns
+  ]}
+/>
+```
+
+## TypeScript Interfaces
+
+- Use the updated interfaces
+- DO NOT use deprecated React-specific interfaces
+
+```typescript
+// CORRECT
+import { ICellRenderer, IHeader } from 'ag-grid-community';
+
+// INCORRECT - DO NOT USE
+// import { ICellRendererReactComp, IHeaderReactComp } from '@ag-grid-community/react';
+```
+
+## Performance Optimization
+
+- Only register modules you need
+- Use appropriate row models for data size:
+  - Client-side: < 10,000 rows
+  - Server-side: > 10,000 rows
+- Use immutable data updates
+- Enable row virtualization for large datasets
+- Use debounced event handlers for frequent grid events
+
+## Accessibility Requirements
+
+```jsx
+<AgGridReact
+  enableScreenReaderSupport={true}
+  tabIndex={0}
+  ariaLabels={{
+    grid: 'Data Grid',
+    cell: params => `${params.column.getColDef().headerName}: ${params.value}`
+  }}
+/>
+```
+
+## Migration from Previous Versions
+
+- Use the codemod tool to migrate from previous versions:
+
+```bash
+npx @ag-grid-devtools/cli@33.0 migrate --from=your-previous-version
+```
+
+- Set `theme="legacy"` if you want to continue using CSS-based themes
+- Use ValidationModule in development to identify missing modules
+
+## AG Grid v33+ Requirements
+
+1. NEVER use DOM manipulation to control theming (no document.body manipulation)
+2. NEVER use the theme format `withParams(params, "mode")` - only use `withParams(params)`
+3. ALWAYS use typed GridOptions<T> pattern for configuration
+4. NEVER use deprecated class-based themes (no ag-theme-* CSS classes)
+5. ALWAYS follow the module registration pattern with ModuleRegistry
+6. ALWAYS use a single theme object with parameter-based configuration (no CSS imports)
+7. NEVER use direct grid property props when GridOptions pattern is available
+8. ALWAYS provide proper TypeScript interfaces for row data and column definitions
+9. Use data-ag-* attributes instead of direct AG Grid class manipulation
+10. Only use documented v33+ APIs from the official documentation

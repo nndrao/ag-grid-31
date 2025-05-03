@@ -1,0 +1,7 @@
+/* Remove default styles that might interfere with our layout */
+#root {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
