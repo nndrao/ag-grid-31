@@ -1,23 +1,15 @@
-import React, { useCallback, useEffect, useState } from "react";
-import { ModuleRegistry, themeQuartz, ColDef, GridOptions } from "ag-grid-community";
+import React, { useCallback, useEffect, useState, useMemo } from "react";
+import { ModuleRegistry, ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
 import { AllEnterpriseModule } from "ag-grid-enterprise";
 import { LicenseManager } from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
 import { useTheme } from "next-themes";
 import Toolbar from "./Toolbar";
-
-// Set license key (this should be in your entry point file)
-// LicenseManager.setLicenseKey("your-license-key");
+import { inferColumnDefs, defaultColDef } from "../utils/gridUtils";
+import { themeQuartz } from "ag-grid-community";
 
 // Register modules - correct approach for v33+
 ModuleRegistry.registerModules([AllEnterpriseModule]);
-
-// Define row data interface
-interface RowData {
-  make: string;
-  model: string;
-  price: number;
-}
 
 // Define theme configuration for v33+
 const lightTheme = themeQuartz.withParams({
@@ -75,83 +67,96 @@ const darkTheme = themeQuartz.withParams({
   wrapperBorderRadius: 2,
 });
 
-// Sample data
-const generateRowData = (): RowData[] => {
-  const data: RowData[] = [];
-  for (let i = 0; i < 10; i++) {
-    data.push({ make: "Toyota", model: "Celica", price: 35000 + i * 1000 });
-    data.push({ make: "Ford", model: "Mondeo", price: 32000 + i * 1000 });
-    data.push({
-      make: "Porsche",
-      model: "Boxster",
-      price: 72000 + i * 1000,
-    });
-  }
-  return data;
-};
+interface DataTableProps {
+  rowData?: any[];
+}
 
-// Column definitions with proper typing for v33+
-const columnDefs: ColDef<RowData>[] = [
-  { field: 'make' },
-  { field: 'model' },
-  { field: 'price' }
-];
-
-// Default column definition
-const defaultColDef: ColDef<RowData> = {
-  flex: 1,
-  minWidth: 100,
-  filter: true,
-  enableValue: true,
-  enableRowGroup: true,
-  enablePivot: true,
-};
-
-const DataTable = () => {
+const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
   const { theme: currentTheme } = useTheme();
-  const [rowData, setRowData] = useState<RowData[]>(generateRowData());
+  const [gridApi, setGridApi] = useState<GridApi<any> | null>(null);
   
   // Get the appropriate theme based on the current theme
   const gridTheme = currentTheme === 'dark' ? darkTheme : lightTheme;
   
-  // Define grid options using the correct type
-  const gridOptions: GridOptions<RowData> = {
-    columnDefs,
-    rowData,
-    defaultColDef,
-    pagination: true,
-    paginationPageSize: 10,
-    rowSelection: 'multiple',
-    rowGroupPanelShow: 'always',
-    enableRangeSelection: true,
-    enableFindFeature: true,
-    statusBar: {
-      statusPanels: [
-        { statusPanel: 'agTotalAndFilteredRowCountComponent' },
-        { statusPanel: 'agAggregationComponent' }
-      ]
-    }
-  };
+  // Infer column definitions from row data and set groupable fields
+  const columnDefs = useMemo(() => {
+    const inferredCols = inferColumnDefs(rowData);
+    
+    // Find the country, issuer name, and instrument type columns and mark them for grouping
+    return inferredCols.map(col => {
+      const field = col.field?.toLowerCase();
+      
+      if (field === 'country' || field === 'issuername' || field === 'issuer' || 
+          field === 'instrumenttype' || field === 'instrument type' || field === 'type') {
+        return {
+          ...col,
+          rowGroup: true,
+          hide: true
+        };
+      }
+      
+      return col;
+    });
+  }, [rowData]);
 
   // Handler for refreshing data
   const handleRefresh = useCallback(() => {
-    setRowData(generateRowData());
+    // TO DO: implement refresh logic
+  }, []);
+
+  // Handle grid ready event
+  const onGridReady = useCallback((params: GridReadyEvent<any>) => {
+    setGridApi(params.api);
+    
+    // Auto-expand all row groups
+    setTimeout(() => {
+      if (params.api) {
+        params.api.expandAll();
+      }
+    }, 500);
   }, []);
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
-      <Toolbar onRefresh={handleRefresh} />
+      <Toolbar 
+        onRefresh={handleRefresh} 
+        gridApi={gridApi}
+      />
       <div className="flex-1 w-full h-[calc(100%-60px)]">
         <AgGridReact
           theme={gridTheme}
-          {...gridOptions}
+          columnDefs={columnDefs}
           rowData={rowData}
-          sideBar
+          defaultColDef={defaultColDef}
+          pagination={false}
+          rowSelection={{
+            mode: "multiRow"
+          }}
+          rowGroupPanelShow="always"
+          cellSelection={true}
+          groupDisplayType="groupRows"
+          groupDefaultExpanded={-1}
+          autoGroupColumnDef={{
+            headerName: "Group",
+            minWidth: 250,
+            cellRendererParams: {
+              suppressCount: false,
+              checkbox: true
+            }
+          }}
+          statusBar={{
+            statusPanels: [
+              { statusPanel: 'agTotalAndFilteredRowCountComponent' },
+              { statusPanel: 'agAggregationComponent' }
+            ]
+          }}
+          sideBar={true}
           className="w-full h-full"
+          onGridReady={onGridReady}
         />
       </div>
     </div>
   );
 };
 
-export default DataTable; 
+export default DataTable;
