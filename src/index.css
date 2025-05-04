@@ -64,10 +64,10 @@ h1 {
     --muted: 180 5% 96%;
     --muted-foreground: 0 0% 45.1%;
     --accent: 174 17% 60%;
-    --accent-foreground: 0 0% 0%;
+    --accent-foreground: 174 100% 15%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 174 17% 85%;
+    --border: 174 17% 65%;
     --input: 174 17% 90%;
     --ring: 174 17% 60%;
     --chart-1: 12 76% 61%;
@@ -91,10 +91,10 @@ h1 {
     --muted: 222 33% 24%;
     --muted-foreground: 0 0% 63.9%;
     --accent: 174 17% 60%;
-    --accent-foreground: 0 0% 0%;
+    --accent-foreground: 174 100% 15%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 222 33% 30%;
+    --border: 222 33% 50%;
     --input: 222 33% 24%;
     --ring: 174 17% 60%;
     --chart-1: 220 70% 50%;

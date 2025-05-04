@@ -17,7 +17,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ColorPicker } from "@/components/ui/color-picker";
+import { DirectColorPicker } from "@/components/ui/direct-color-picker";
 import { cn } from "@/lib/utils";
 import { Search, AlignLeft, AlignCenter, AlignRight } from "lucide-react";
 
@@ -264,9 +264,9 @@ export function ColumnSettingsDialog({
                           key={colId}
                           className={cn(
                             "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
-                            "hover:bg-accent hover:text-accent-foreground",
+                            "hover:bg-accent",
                             "border-l-4",
-                            isSelected ? "bg-accent text-accent-foreground border-primary" : "border-transparent",
+                            isSelected ? "bg-accent border-primary" : "border-transparent",
                             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
                           )}
                           onClick={() => {
@@ -582,7 +582,7 @@ export function ColumnSettingsDialog({
                               <Label htmlFor="apply-text-color" className="text-xs">Apply</Label>
                             </div>
                           </div>
-                          <ColorPicker
+                          <DirectColorPicker
                             value={(selectedColumn.headerComponentParams?.color as string) || "#000000"}
                             onChange={(value) => updateColumnProperty(
                               selectedColumn.colId || selectedColumn.field || '', 
@@ -620,7 +620,7 @@ export function ColumnSettingsDialog({
                               <Label htmlFor="apply-bg-color" className="text-xs">Apply</Label>
                             </div>
                           </div>
-                          <ColorPicker
+                          <DirectColorPicker
                             value={(selectedColumn.headerComponentParams?.backgroundColor as string) || "#ffffff"}
                             onChange={(value) => updateColumnProperty(
                               selectedColumn.colId || selectedColumn.field || '', 
@@ -771,7 +771,7 @@ export function ColumnSettingsDialog({
                         
                         <div>
                           <Label htmlFor="header-border-color">Color</Label>
-                          <ColorPicker
+                          <DirectColorPicker
                             value={(selectedColumn.headerComponentParams?.borderColor as string) || "#000000"}
                             onChange={(value) => updateColumnProperty(
                               selectedColumn.colId || selectedColumn.field || '', 
@@ -819,86 +819,416 @@ export function ColumnSettingsDialog({
               <TabsContent value="cell" className="border rounded-md p-4 flex-1 overflow-auto">
                 {selectedColumn ? (
                   <>
-                    <div className="bg-primary text-primary-foreground p-2 mb-4 text-center">
+                    <div className="bg-neutral text-neutral-foreground p-2 mb-4 text-center w-1/2 mx-auto border">
                       Cell Preview
                     </div>
                     
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="cell-font-family">Font Family</Label>
-                        <Select 
-                          value={(selectedColumn.cellComponentParams?.fontFamily as string) || "arial"}
-                          onValueChange={(value) => updateColumnProperty(
-                            selectedColumn.colId || selectedColumn.field || '', 
-                            'cellComponentParams', 
-                            { ...selectedColumn.cellComponentParams, fontFamily: value }
-                          )}
-                        >
-                          <SelectTrigger id="cell-font-family" className="mt-1">
-                            <SelectValue placeholder="Select font" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="arial">Arial</SelectItem>
-                            <SelectItem value="inter">Inter</SelectItem>
-                            <SelectItem value="roboto">Roboto</SelectItem>
-                          </SelectContent>
-                        </Select>
+                    {/* Typography Section */}
+                    <div className="mb-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <Label htmlFor="cell-font-family">Font Family</Label>
+                          <Select 
+                            value={(selectedColumn.cellComponentParams?.fontFamily as string) || "arial"}
+                            onValueChange={(value) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'cellComponentParams', 
+                              { ...selectedColumn.cellComponentParams, fontFamily: value }
+                            )}
+                          >
+                            <SelectTrigger id="cell-font-family" className="mt-1">
+                              <SelectValue placeholder="Select font" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="arial">Arial</SelectItem>
+                              <SelectItem value="roboto">Roboto</SelectItem>
+                              <SelectItem value="inter">Inter</SelectItem>
+                              <SelectItem value="monospace">Monospace</SelectItem>
+                              <SelectItem value="consolas">Consolas</SelectItem>
+                              <SelectItem value="courier">Courier</SelectItem>
+                              <SelectItem value="monaco">Monaco</SelectItem>
+                              <SelectItem value="source-code-pro">Source Code Pro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="cell-font-size">Font Size</Label>
+                          <Select 
+                            value={(selectedColumn.cellComponentParams?.fontSize as string) || "14px"}
+                            onValueChange={(value) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'cellComponentParams', 
+                              { ...selectedColumn.cellComponentParams, fontSize: value }
+                            )}
+                          >
+                            <SelectTrigger id="cell-font-size" className="mt-1">
+                              <SelectValue placeholder="Select size" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="10px">10px</SelectItem>
+                              <SelectItem value="11px">11px</SelectItem>
+                              <SelectItem value="12px">12px</SelectItem>
+                              <SelectItem value="13px">13px</SelectItem>
+                              <SelectItem value="14px">14px</SelectItem>
+                              <SelectItem value="15px">15px</SelectItem>
+                              <SelectItem value="16px">16px</SelectItem>
+                              <SelectItem value="18px">18px</SelectItem>
+                              <SelectItem value="20px">20px</SelectItem>
+                              <SelectItem value="22px">22px</SelectItem>
+                              <SelectItem value="24px">24px</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       
-                      <div>
-                        <Label htmlFor="cell-font-size">Font Size</Label>
-                        <Select 
-                          value={(selectedColumn.cellComponentParams?.fontSize as string) || "14px"}
-                          onValueChange={(value) => updateColumnProperty(
+                      <div className="grid grid-cols-2 gap-4 mt-4">
+                        <div>
+                          <Label htmlFor="cell-font-weight">Font Weight</Label>
+                          <Select 
+                            value={(selectedColumn.cellComponentParams?.fontWeight as string) || "normal"}
+                            onValueChange={(value) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'cellComponentParams', 
+                              { ...selectedColumn.cellComponentParams, fontWeight: value }
+                            )}
+                          >
+                            <SelectTrigger id="cell-font-weight" className="mt-1">
+                              <SelectValue placeholder="Select weight" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="normal">Normal</SelectItem>
+                              <SelectItem value="bold">Bold</SelectItem>
+                              <SelectItem value="lighter">Lighter</SelectItem>
+                              <SelectItem value="bolder">Bolder</SelectItem>
+                              <SelectItem value="100">100</SelectItem>
+                              <SelectItem value="200">200</SelectItem>
+                              <SelectItem value="300">300</SelectItem>
+                              <SelectItem value="400">400</SelectItem>
+                              <SelectItem value="500">500</SelectItem>
+                              <SelectItem value="600">600</SelectItem>
+                              <SelectItem value="700">700</SelectItem>
+                              <SelectItem value="800">800</SelectItem>
+                              <SelectItem value="900">900</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div>
+                          <Label>Style</Label>
+                          <div className="flex space-x-2 mt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                "flex-1 font-bold",
+                                (selectedColumn.cellComponentParams?.fontWeight === 'bold') && "bg-accent"
+                              )}
+                              onClick={() => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'cellComponentParams', 
+                                { 
+                                  ...selectedColumn.cellComponentParams, 
+                                  fontWeight: selectedColumn.cellComponentParams?.fontWeight === 'bold' ? 'normal' : 'bold' 
+                                }
+                              )}
+                            >
+                              B
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                "flex-1 italic",
+                                (selectedColumn.cellComponentParams?.fontStyle === 'italic') && "bg-accent"
+                              )}
+                              onClick={() => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'cellComponentParams', 
+                                { 
+                                  ...selectedColumn.cellComponentParams, 
+                                  fontStyle: selectedColumn.cellComponentParams?.fontStyle === 'italic' ? 'normal' : 'italic' 
+                                }
+                              )}
+                            >
+                              I
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className={cn(
+                                "flex-1 underline",
+                                (selectedColumn.cellComponentParams?.textDecoration === 'underline') && "bg-accent"
+                              )}
+                              onClick={() => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'cellComponentParams', 
+                                { 
+                                  ...selectedColumn.cellComponentParams, 
+                                  textDecoration: selectedColumn.cellComponentParams?.textDecoration === 'underline' ? 'none' : 'underline' 
+                                }
+                              )}
+                            >
+                              U
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Alignment Section */}
+                    <div className="mb-6">
+                      <div className="flex justify-between">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "flex-1 mr-1",
+                            (selectedColumn.cellComponentParams?.textAlign === 'left' || !selectedColumn.cellComponentParams?.textAlign) && "bg-accent"
+                          )}
+                          onClick={() => updateColumnProperty(
                             selectedColumn.colId || selectedColumn.field || '', 
                             'cellComponentParams', 
-                            { ...selectedColumn.cellComponentParams, fontSize: value }
+                            { ...selectedColumn.cellComponentParams, textAlign: 'left' }
                           )}
                         >
-                          <SelectTrigger id="cell-font-size" className="mt-1">
-                            <SelectValue placeholder="Select size" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="10px">10px</SelectItem>
-                            <SelectItem value="12px">12px</SelectItem>
-                            <SelectItem value="14px">14px</SelectItem>
-                            <SelectItem value="16px">16px</SelectItem>
-                            <SelectItem value="18px">18px</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="cell-text-align">Text Align</Label>
-                        <Select 
-                          value={(selectedColumn.cellComponentParams?.textAlign as string) || "left"}
-                          onValueChange={(value) => updateColumnProperty(
+                          <AlignLeft className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "flex-1 mx-1",
+                            selectedColumn.cellComponentParams?.textAlign === 'center' && "bg-accent"
+                          )}
+                          onClick={() => updateColumnProperty(
                             selectedColumn.colId || selectedColumn.field || '', 
                             'cellComponentParams', 
-                            { ...selectedColumn.cellComponentParams, textAlign: value }
+                            { ...selectedColumn.cellComponentParams, textAlign: 'center' }
                           )}
                         >
-                          <SelectTrigger id="cell-text-align" className="mt-1">
-                            <SelectValue placeholder="Select alignment" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="left">Left</SelectItem>
-                            <SelectItem value="center">Center</SelectItem>
-                            <SelectItem value="right">Right</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="cell-text-color">Text Color</Label>
-                        <ColorPicker
-                          value={(selectedColumn.cellComponentParams?.color as string) || "#000000"}
-                          onChange={(value) => updateColumnProperty(
+                          <AlignCenter className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className={cn(
+                            "flex-1 ml-1",
+                            selectedColumn.cellComponentParams?.textAlign === 'right' && "bg-accent"
+                          )}
+                          onClick={() => updateColumnProperty(
                             selectedColumn.colId || selectedColumn.field || '', 
                             'cellComponentParams', 
-                            { ...selectedColumn.cellComponentParams, color: value }
+                            { ...selectedColumn.cellComponentParams, textAlign: 'right' }
                           )}
-                        />
+                        >
+                          <AlignRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    {/* Colors Section */}
+                    <div className="mb-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label htmlFor="apply-cell-text-color">Text Color</Label>
+                            <div className="flex items-center">
+                              <Checkbox 
+                                id="apply-cell-text-color"
+                                checked={!!selectedColumn.cellComponentParams?.color}
+                                onCheckedChange={(checked) => {
+                                  if (!checked) {
+                                    updateColumnProperty(
+                                      selectedColumn.colId || selectedColumn.field || '', 
+                                      'cellComponentParams', 
+                                      { ...selectedColumn.cellComponentParams, color: undefined }
+                                    );
+                                  } else {
+                                    updateColumnProperty(
+                                      selectedColumn.colId || selectedColumn.field || '', 
+                                      'cellComponentParams', 
+                                      { ...selectedColumn.cellComponentParams, color: "#000000" }
+                                    );
+                                  }
+                                }}
+                                className="mr-2"
+                              />
+                              <Label htmlFor="apply-cell-text-color" className="text-xs">Apply</Label>
+                            </div>
+                          </div>
+                          <DirectColorPicker
+                            value={(selectedColumn.cellComponentParams?.color as string) || "#000000"}
+                            onChange={(value) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'cellComponentParams', 
+                              { ...selectedColumn.cellComponentParams, color: value }
+                            )}
+                            disabled={!selectedColumn.cellComponentParams?.color}
+                          />
+                        </div>
+                        
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <Label htmlFor="apply-cell-bg-color">Background</Label>
+                            <div className="flex items-center">
+                              <Checkbox 
+                                id="apply-cell-bg-color"
+                                checked={!!selectedColumn.cellComponentParams?.backgroundColor}
+                                onCheckedChange={(checked) => {
+                                  if (!checked) {
+                                    updateColumnProperty(
+                                      selectedColumn.colId || selectedColumn.field || '', 
+                                      'cellComponentParams', 
+                                      { ...selectedColumn.cellComponentParams, backgroundColor: undefined }
+                                    );
+                                  } else {
+                                    updateColumnProperty(
+                                      selectedColumn.colId || selectedColumn.field || '', 
+                                      'cellComponentParams', 
+                                      { ...selectedColumn.cellComponentParams, backgroundColor: "#ffffff" }
+                                    );
+                                  }
+                                }}
+                                className="mr-2"
+                              />
+                              <Label htmlFor="apply-cell-bg-color" className="text-xs">Apply</Label>
+                            </div>
+                          </div>
+                          <DirectColorPicker
+                            value={(selectedColumn.cellComponentParams?.backgroundColor as string) || "#ffffff"}
+                            onChange={(value) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'cellComponentParams', 
+                              { ...selectedColumn.cellComponentParams, backgroundColor: value }
+                            )}
+                            disabled={!selectedColumn.cellComponentParams?.backgroundColor}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Borders Section */}
+                    <div>
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="cell-border-props">Border Properties</Label>
+                          <div className="flex items-center">
+                            <Checkbox 
+                              id="apply-cell-borders"
+                              checked={!!selectedColumn.cellComponentParams?.borderStyle}
+                              onCheckedChange={(checked) => {
+                                if (!checked) {
+                                  updateColumnProperty(
+                                    selectedColumn.colId || selectedColumn.field || '', 
+                                    'cellComponentParams', 
+                                    { 
+                                      ...selectedColumn.cellComponentParams, 
+                                      borderStyle: undefined,
+                                      borderWidth: undefined,
+                                      borderColor: undefined
+                                    }
+                                  );
+                                } else {
+                                  updateColumnProperty(
+                                    selectedColumn.colId || selectedColumn.field || '', 
+                                    'cellComponentParams', 
+                                    { 
+                                      ...selectedColumn.cellComponentParams, 
+                                      borderStyle: 'solid',
+                                      borderWidth: '1px',
+                                      borderColor: '#000000'
+                                    }
+                                  );
+                                }
+                              }}
+                              className="mr-2"
+                            />
+                            <Label htmlFor="apply-cell-borders" className="text-xs">Apply Borders</Label>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <Label htmlFor="cell-border-style">Style</Label>
+                            <Select 
+                              value={(selectedColumn.cellComponentParams?.borderStyle as string) || "none"}
+                              onValueChange={(value) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'cellComponentParams', 
+                                { ...selectedColumn.cellComponentParams, borderStyle: value }
+                              )}
+                              disabled={!selectedColumn.cellComponentParams?.borderStyle}
+                            >
+                              <SelectTrigger id="cell-border-style" className="mt-1">
+                                <SelectValue placeholder="Select style" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="none">None</SelectItem>
+                                <SelectItem value="solid">Solid</SelectItem>
+                                <SelectItem value="dashed">Dashed</SelectItem>
+                                <SelectItem value="dotted">Dotted</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          <div>
+                            <div className="flex justify-between items-center">
+                              <Label htmlFor="cell-border-width">Width: {selectedColumn.cellComponentParams?.borderWidth || '1px'}</Label>
+                            </div>
+                            <Slider 
+                              id="cell-border-width"
+                              min={1}
+                              max={5}
+                              step={1}
+                              value={[parseInt((selectedColumn.cellComponentParams?.borderWidth as string)?.replace('px', '') || '1')]}
+                              onValueChange={(values: number[]) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'cellComponentParams', 
+                                { ...selectedColumn.cellComponentParams, borderWidth: `${values[0]}px` }
+                              )}
+                              className="mt-2"
+                              disabled={!selectedColumn.cellComponentParams?.borderStyle}
+                            />
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="cell-border-color">Color</Label>
+                          <DirectColorPicker
+                            value={(selectedColumn.cellComponentParams?.borderColor as string) || "#000000"}
+                            onChange={(value) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'cellComponentParams', 
+                              { ...selectedColumn.cellComponentParams, borderColor: value }
+                            )}
+                            disabled={!selectedColumn.cellComponentParams?.borderStyle}
+                          />
+                        </div>
+                        
+                        <div>
+                          <Label htmlFor="cell-border-sides">Sides</Label>
+                          <Select 
+                            value={(selectedColumn.cellComponentParams?.borderSides as string) || "all"}
+                            onValueChange={(value) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'cellComponentParams', 
+                              { ...selectedColumn.cellComponentParams, borderSides: value }
+                            )}
+                            disabled={!selectedColumn.cellComponentParams?.borderStyle}
+                          >
+                            <SelectTrigger id="cell-border-sides" className="mt-1">
+                              <SelectValue placeholder="Select sides" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="all">All</SelectItem>
+                              <SelectItem value="top">Top</SelectItem>
+                              <SelectItem value="right">Right</SelectItem>
+                              <SelectItem value="bottom">Bottom</SelectItem>
+                              <SelectItem value="left">Left</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                     </div>
                   </>
