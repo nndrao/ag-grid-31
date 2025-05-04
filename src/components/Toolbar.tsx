@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { GridApi } from "ag-grid-community";
+import { ColumnSettingsDialog } from "./ColumnSettingsDialog";
 
 interface ToolbarProps {
   onRefresh?: () => void;
@@ -8,18 +9,12 @@ interface ToolbarProps {
 }
 
 const Toolbar: React.FC<ToolbarProps> = ({ onRefresh, gridApi }) => {
+  const [columnSettingsOpen, setColumnSettingsOpen] = useState(false);
+
   // Function to export data to CSV
   const handleExport = () => {
     if (gridApi) {
       gridApi.exportDataAsCsv();
-    }
-  };
-
-  // Function to show/hide columns
-  const handleShowColumns = () => {
-    if (gridApi) {
-      // In AG-Grid v33+, we can use the grid API to show column tool panel
-      gridApi.openToolPanel('columns');
     }
   };
 
@@ -41,9 +36,18 @@ const Toolbar: React.FC<ToolbarProps> = ({ onRefresh, gridApi }) => {
   return (
     <div className="h-[60px] w-full flex items-center justify-between px-4 border-b bg-background">
       <div className="flex items-center gap-2">
-        <Button size="sm" variant="outline" onClick={handleShowColumns}>
-          Columns
+        <Button 
+          size="sm" 
+          variant="outline" 
+          onClick={() => setColumnSettingsOpen(true)}
+        >
+          Column Settings
         </Button>
+        <ColumnSettingsDialog 
+          gridApi={gridApi as GridApi} 
+          open={columnSettingsOpen} 
+          setOpen={setColumnSettingsOpen} 
+        />
         <Button size="sm" variant="outline" onClick={handleShowFilters}>
           Filters
         </Button>

@@ -1,12 +1,12 @@
-import React, { useCallback, useEffect, useState, useMemo } from "react";
-import { ModuleRegistry, ColDef, GridApi, GridReadyEvent } from "ag-grid-community";
+import React, { useCallback, useState, useMemo, useRef, useEffect } from "react";
+import { ModuleRegistry, GridApi, GridReadyEvent, ColDef } from "ag-grid-community";
 import { AllEnterpriseModule } from "ag-grid-enterprise";
-import { LicenseManager } from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
 import { useTheme } from "next-themes";
 import Toolbar from "./Toolbar";
 import { inferColumnDefs, defaultColDef } from "../utils/gridUtils";
 import { themeQuartz } from "ag-grid-community";
+import CustomHeaderComponent from "./CustomHeaderComponent";
 
 // Register modules - correct approach for v33+
 ModuleRegistry.registerModules([AllEnterpriseModule]);
@@ -22,12 +22,12 @@ const lightTheme = themeQuartz.withParams({
   checkboxBorderRadius: 2,
   columnBorder: true,
   fontFamily: {
-    googleFont: "Inter",
+    googleFont: "Roboto",
   },
   fontSize: 14,
   headerBackgroundColor: "#EFEFEFD6",
   headerFontFamily: {
-    googleFont: "Inter",
+    googleFont: "Roboto",
   },
   headerFontSize: 14,
   headerFontWeight: 500,
@@ -46,7 +46,7 @@ const darkTheme = themeQuartz.withParams({
   checkboxBorderRadius: 2,
   columnBorder: true,
   fontFamily: {
-    googleFont: "Inter",
+    googleFont: "Roboto",
   },
   browserColorScheme: "dark",
   chromeBackgroundColor: {
@@ -57,7 +57,7 @@ const darkTheme = themeQuartz.withParams({
   fontSize: 14,
   foregroundColor: "#FFF",
   headerFontFamily: {
-    googleFont: "Inter",
+    googleFont: "Roboto",
   },
   headerFontSize: 14,
   iconSize: 12,
@@ -74,6 +74,7 @@ interface DataTableProps {
 const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
   const { theme: currentTheme } = useTheme();
   const [gridApi, setGridApi] = useState<GridApi<any> | null>(null);
+  const gridRef = useRef<AgGridReact>(null);
   
   // Get the appropriate theme based on the current theme
   const gridTheme = currentTheme === 'dark' ? darkTheme : lightTheme;
@@ -95,7 +96,10 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
         };
       }
       
-      return col;
+      return {
+        ...col,
+        headerComponent: CustomHeaderComponent
+      };
     });
   }, [rowData]);
 
@@ -110,11 +114,26 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
     
     // Auto-expand all row groups
     setTimeout(() => {
-      if (params.api) {
+      if (params.api && !params.api.isDestroyed()) {
         params.api.expandAll();
       }
     }, 500);
   }, []);
+
+  // Method to update column definitions - AG Grid v33+ compliant
+  const updateColumnDefs = useCallback((newColDefs: ColDef[]) => {
+    if (gridRef.current && gridRef.current.api) {
+      // Use setGridOption method which is the recommended approach for AG Grid 33+
+      gridRef.current.api.setGridOption('columnDefs', newColDefs);
+    }
+  }, []);
+
+  // Expose the updateColumnDefs method through the gridApi
+  useEffect(() => {
+    if (gridApi) {
+      (gridApi as any).updateColumnDefs = updateColumnDefs;
+    }
+  }, [gridApi, updateColumnDefs]);
 
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
@@ -124,25 +143,27 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
       />
       <div className="flex-1 w-full h-[calc(100%-60px)]">
         <AgGridReact
+          ref={gridRef}
           theme={gridTheme}
           columnDefs={columnDefs}
           rowData={rowData}
           defaultColDef={defaultColDef}
           pagination={false}
-          rowSelection={{
-            mode: "multiRow"
-          }}
+          rowSelection={{ mode: "multiRow" }}
           rowGroupPanelShow="always"
           cellSelection={true}
-          groupDisplayType="groupRows"
+          groupDisplayType="singleColumn"
           groupDefaultExpanded={-1}
           autoGroupColumnDef={{
-            headerName: "Group",
-            minWidth: 250,
+            headerName: "All Groups",
+            minWidth: 300,
             cellRendererParams: {
               suppressCount: false,
-              checkbox: true
-            }
+              suppressCheckbox: true
+            },
+            // Make the group column take full width for better readability
+            cellRenderer: 'agGroupCellRenderer',
+            flex: 1
           }}
           statusBar={{
             statusPanels: [
@@ -151,6 +172,7 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
             ]
           }}
           sideBar={true}
+          rowHeight={25}
           className="w-full h-full"
           onGridReady={onGridReady}
         />
