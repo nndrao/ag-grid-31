@@ -60,7 +60,7 @@ export function ColumnSettingsDialog({
   const [selectedColumns, setSelectedColumns] = useState<Set<string>>(new Set());
   const [bulkUpdateMode, setBulkUpdateMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("header");
 
   // Load columns when dialog opens
   useEffect(() => {
@@ -73,7 +73,7 @@ export function ColumnSettingsDialog({
       setSelectedColumn(null);
       setSelectedColumns(new Set());
       setSearchTerm("");
-      setActiveTab("general");
+      setActiveTab("header");
     }
   }, [open, gridApi]);
 
@@ -306,29 +306,23 @@ export function ColumnSettingsDialog({
           <div className="w-3/4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
               <TabsList className="w-full justify-start px-4 border-b rounded-none">
-                <TabsTrigger value="general">General</TabsTrigger>
                 <TabsTrigger value="header">Header</TabsTrigger>
                 <TabsTrigger value="cell">Cell</TabsTrigger>
                 <TabsTrigger value="formatter">Formatter</TabsTrigger>
                 <TabsTrigger value="filter">Filter</TabsTrigger>
                 <TabsTrigger value="editors">Editors</TabsTrigger>
               </TabsList>
-              {/* General Tab */}
-              <TabsContent value="general" className="p-0 flex-1 overflow-auto">
+              
+              {/* Header Tab */}
+              <TabsContent value="header" className="p-0 flex-1 overflow-auto">
                 {selectedColumn ? (
-                  <div className="p-4 space-y-4">
-                    <div className="bg-muted/50 rounded-md p-2 mb-2 text-center text-sm">
-                      <div className="font-medium">
-                        Field: <span className="font-mono">{selectedColumn.field}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-6">
-                      <div>
-                        <Label htmlFor="header-name" className="mb-1.5">Header Name</Label>
+                  <div className="p-4 space-y-6">
+                    <div className="flex gap-4 items-center mb-2">
+                      <div className="flex-1">
                         <Input
                           id="header-name"
-                          value={selectedColumn.headerName || ''}
+                          value={selectedColumn.headerName || selectedColumn.field || ''}
+                          placeholder="Header Caption"
                           onChange={(e) => updateColumnProperty(
                             selectedColumn.colId || selectedColumn.field || '', 
                             'headerName', 
@@ -336,114 +330,10 @@ export function ColumnSettingsDialog({
                           )}
                         />
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="width" className="mb-1.5">Width</Label>
-                          <Input
-                            id="width"
-                            type="number"
-                            value={selectedColumn.width || ''}
-                            onChange={(e) => updateColumnProperty(
-                              selectedColumn.colId || selectedColumn.field || '', 
-                              'width', 
-                              parseInt(e.target.value)
-                            )}
-                          />
+                      <div className="bg-muted/50 rounded-md p-2 text-center text-sm flex-1">
+                        <div className="font-medium">
+                          Header Preview
                         </div>
-                        
-                        <div>
-                          <Label htmlFor="type" className="mb-1.5">Type</Label>
-                          <Select
-                            value={(selectedColumn.type as string) || 'default'}
-                            onValueChange={(value) => updateColumnProperty(
-                              selectedColumn.colId || selectedColumn.field || '', 
-                              'type', 
-                              value === 'default' ? undefined : value
-                            )}
-                          >
-                            <SelectTrigger id="type">
-                              <SelectValue placeholder="Select type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="default">Default</SelectItem>
-                              <SelectItem value="number">Number</SelectItem>
-                              <SelectItem value="string">String</SelectItem>
-                              <SelectItem value="date">Date</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="flex items-center justify-between bg-muted/30 p-2 rounded">
-                          <Label htmlFor="editable" className="mb-1.5">Editable</Label>
-                          <Switch
-                            id="editable"
-                            checked={!!selectedColumn.editable}
-                            onCheckedChange={(checked) => updateColumnProperty(
-                              selectedColumn.colId || selectedColumn.field || '', 
-                              'editable', 
-                              checked
-                            )}
-                          />
-                        </div>
-                        
-                        <div className="flex items-center justify-between bg-muted/30 p-2 rounded">
-                          <Label htmlFor="resizable" className="mb-1.5">Resizable</Label>
-                          <Switch
-                            id="resizable"
-                            checked={!!selectedColumn.resizable}
-                            onCheckedChange={(checked) => updateColumnProperty(
-                              selectedColumn.colId || selectedColumn.field || '', 
-                              'resizable', 
-                              checked
-                            )}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <Label htmlFor="pinned" className="mb-1.5">Pinned</Label>
-                        <Select
-                          value={(selectedColumn.pinned as string) || 'none'}
-                          onValueChange={(value) => updateColumnProperty(
-                            selectedColumn.colId || selectedColumn.field || '', 
-                            'pinned', 
-                            value === 'none' ? null : value
-                          )}
-                        >
-                          <SelectTrigger id="pinned">
-                            <SelectValue placeholder="Not pinned" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="none">Not pinned</SelectItem>
-                            <SelectItem value="left">Left</SelectItem>
-                            <SelectItem value="right">Right</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center h-full text-center py-8">
-                    <div>
-                      <div className="mb-2">
-                        <Settings className="h-10 w-10 mx-auto opacity-20" />
-                      </div>
-                      <p className="text-sm">Select a column to edit its properties</p>
-                    </div>
-                  </div>
-                )}
-              </TabsContent>
-              
-              {/* Header Tab */}
-              <TabsContent value="header" className="p-0 flex-1 overflow-auto">
-                {selectedColumn ? (
-                  <div className="p-4 space-y-4">
-                    <div className="bg-muted/50 rounded-md p-2 mb-2 text-center text-sm">
-                      <div className="font-medium">
-                        Header Preview
                       </div>
                     </div>
                     
