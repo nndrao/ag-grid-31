@@ -1,0 +1,17 @@
+1. Fix the DialogContent to have a fixed height and proper border
+   className="max-w-4xl p-0 overflow-hidden border"
+
+2. Remove the duplicate close button in the header
+   Remove the X button in the header section, keeping only the one that comes with DialogContent
+
+3. Fix the column list width to be narrower
+   Change from w-1/4 to w-56
+
+4. Fix the tab styling to be more compact and aligned
+   Use border-b-2 styling for active tabs instead of the default shadcn styling
+
+5. Make the dialog height fixed instead of using max-height
+   Use h-[550px] instead of max-h-[85vh]
+
+6. Make sure the border settings are collapsible with <details> elements
+   This keeps the border controls hidden by default

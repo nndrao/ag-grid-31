@@ -7,6 +7,7 @@ interface DirectColorPickerProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   label?: string;
+  className?: string;
 }
 
 // Helper function to convert hex to rgba
@@ -53,7 +54,7 @@ function getRgbaComponents(rgba: string): { hex: string; opacity: number } {
   return { hex: rgba, opacity: 1 };
 }
 
-export function DirectColorPicker({ value, onChange, disabled = false, label }: DirectColorPickerProps) {
+export function DirectColorPicker({ value, onChange, disabled = false, label, className }: DirectColorPickerProps) {
   // Extract hex and opacity from the initial value
   const initialColor = value.startsWith('rgba') ? getRgbaComponents(value) : { hex: value || "#000000", opacity: 1 };
   
@@ -79,7 +80,7 @@ export function DirectColorPicker({ value, onChange, disabled = false, label }: 
   };
 
   return (
-    <div className="flex flex-col space-y-1.5">
+    <div className={cn("flex flex-col space-y-1.5", className)}>
       {label && <Label>{label}</Label>}
       <div 
         className={cn(
