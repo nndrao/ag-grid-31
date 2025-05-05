@@ -45,6 +45,38 @@ interface ExtendedColDef extends ColDef {
     [key: string]: any;
   };
   valueFormatter?: any; // Using any to avoid type conflicts with AG Grid's ValueFormatter
+  
+  // Additional filter properties
+  filterParams?: {
+    // Text filter params
+    filterOptions?: string[];
+    defaultOption?: string;
+    caseSensitive?: boolean;
+    
+    // Number filter params
+    allowedCharPattern?: string;
+    numberParser?: (text: string) => number;
+    
+    // Date filter params
+    comparator?: (filterDate: Date, cellValue: any) => number;
+    browserDatePicker?: boolean;
+    minValidYear?: number;
+    maxValidYear?: number;
+    
+    // Set filter params
+    values?: any[];
+    cellRenderer?: any;
+    
+    // Multi filter params
+    filters?: any[];
+    
+    // Common params
+    buttons?: string[];
+    closeOnApply?: boolean;
+    debounceMs?: number;
+    
+    [key: string]: any;
+  };
 }
 
 // Define the component
@@ -1684,10 +1716,39 @@ export function ColumnSettingsDialog({
                     </div>
                     
                     <div className="space-y-6">
+                      {/* Filter Enable/Disable */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="filter-enabled" 
+                          checked={selectedColumn.filter !== false}
+                          onCheckedChange={(checked) => updateColumnProperty(
+                            selectedColumn.colId || selectedColumn.field || '', 
+                            'filter', 
+                            checked === true ? true : false
+                          )}
+                        />
+                        <Label htmlFor="filter-enabled" className="font-medium text-foreground">Enable Filter</Label>
+                      </div>
+
+                      {/* Floating Filter Enable/Disable */}
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="floating-filter-enabled" 
+                          checked={selectedColumn.floatingFilter === true}
+                          onCheckedChange={(checked) => updateColumnProperty(
+                            selectedColumn.colId || selectedColumn.field || '', 
+                            'floatingFilter', 
+                            checked === true ? true : false
+                          )}
+                        />
+                        <Label htmlFor="floating-filter-enabled" className="font-medium text-foreground">Enable Floating Filter</Label>
+                      </div>
+
+                      {/* Filter Type Selection */}
                       <div>
                         <Label htmlFor="filter-type" className="mb-1.5 font-medium text-foreground">Filter Type</Label>
                         <Select
-                          value={selectedColumn.filterType || 'auto'}
+                          value={selectedColumn.filterType || 'agTextColumnFilter'}
                           onValueChange={(value) => updateColumnProperty(
                             selectedColumn.colId || selectedColumn.field || '', 
                             'filterType', 
@@ -1698,12 +1759,436 @@ export function ColumnSettingsDialog({
                             <SelectValue placeholder="Select filter type" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="auto">Auto</SelectItem>
-                            <SelectItem value="text">Text</SelectItem>
-                            <SelectItem value="number">Number</SelectItem>
-                            <SelectItem value="date">Date</SelectItem>
+                            <SelectItem value="agTextColumnFilter">Text</SelectItem>
+                            <SelectItem value="agNumberColumnFilter">Number</SelectItem>
+                            <SelectItem value="agDateColumnFilter">Date</SelectItem>
+                            <SelectItem value="agSetColumnFilter">Set</SelectItem>
+                            <SelectItem value="agMultiColumnFilter">Multi</SelectItem>
                           </SelectContent>
                         </Select>
+                      </div>
+
+                      {/* Filter Parameters - Text Filter */}
+                      {selectedColumn.filterType === 'agTextColumnFilter' && (
+                        <div className="space-y-4 border-t pt-4">
+                          <h3 className="font-medium text-sm">Text Filter Parameters</h3>
+                          
+                          <div>
+                            <Label htmlFor="text-filter-default-option" className="mb-1.5 text-sm">Default Option</Label>
+                            <Select
+                              value={(selectedColumn.filterParams?.defaultOption as string) || 'contains'}
+                              onValueChange={(value) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'filterParams', 
+                                { 
+                                  ...selectedColumn.filterParams,
+                                  defaultOption: value 
+                                }
+                              )}
+                            >
+                              <SelectTrigger id="text-filter-default-option">
+                                <SelectValue placeholder="Default filter option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="contains">Contains</SelectItem>
+                                <SelectItem value="equals">Equals</SelectItem>
+                                <SelectItem value="startsWith">Starts With</SelectItem>
+                                <SelectItem value="endsWith">Ends With</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="text-filter-case-sensitive" 
+                              checked={selectedColumn.filterParams?.caseSensitive === true}
+                              onCheckedChange={(checked) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'filterParams', 
+                                { 
+                                  ...selectedColumn.filterParams,
+                                  caseSensitive: checked === true ? true : false 
+                                }
+                              )}
+                            />
+                            <Label htmlFor="text-filter-case-sensitive" className="text-sm">Case Sensitive</Label>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Filter Parameters - Number Filter */}
+                      {selectedColumn.filterType === 'agNumberColumnFilter' && (
+                        <div className="space-y-4 border-t pt-4">
+                          <h3 className="font-medium text-sm">Number Filter Parameters</h3>
+                          
+                          <div>
+                            <Label htmlFor="number-filter-default-option" className="mb-1.5 text-sm">Default Option</Label>
+                            <Select
+                              value={(selectedColumn.filterParams?.defaultOption as string) || 'equals'}
+                              onValueChange={(value) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'filterParams', 
+                                { 
+                                  ...selectedColumn.filterParams,
+                                  defaultOption: value 
+                                }
+                              )}
+                            >
+                              <SelectTrigger id="number-filter-default-option">
+                                <SelectValue placeholder="Default filter option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="equals">Equals</SelectItem>
+                                <SelectItem value="notEqual">Not Equal</SelectItem>
+                                <SelectItem value="lessThan">Less Than</SelectItem>
+                                <SelectItem value="lessThanOrEqual">Less Than or Equal</SelectItem>
+                                <SelectItem value="greaterThan">Greater Than</SelectItem>
+                                <SelectItem value="greaterThanOrEqual">Greater Than or Equal</SelectItem>
+                                <SelectItem value="inRange">In Range</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="number-filter-allowed-chars" className="mb-1.5 text-sm">Allowed Characters</Label>
+                            <Input
+                              id="number-filter-allowed-chars"
+                              value={(selectedColumn.filterParams?.allowedCharPattern as string) || '\\d\\-\\.'}
+                              onChange={(e) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'filterParams', 
+                                { 
+                                  ...selectedColumn.filterParams,
+                                  allowedCharPattern: e.target.value 
+                                }
+                              )}
+                              placeholder="Regular expression pattern"
+                            />
+                            <p className="text-xs text-muted-foreground mt-1">Default: \d\-\. (digits, minus, decimal)</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Filter Parameters - Date Filter */}
+                      {selectedColumn.filterType === 'agDateColumnFilter' && (
+                        <div className="space-y-4 border-t pt-4">
+                          <h3 className="font-medium text-sm">Date Filter Parameters</h3>
+                          
+                          <div>
+                            <Label htmlFor="date-filter-default-option" className="mb-1.5 text-sm">Default Option</Label>
+                            <Select
+                              value={(selectedColumn.filterParams?.defaultOption as string) || 'equals'}
+                              onValueChange={(value) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'filterParams', 
+                                { 
+                                  ...selectedColumn.filterParams,
+                                  defaultOption: value 
+                                }
+                              )}
+                            >
+                              <SelectTrigger id="date-filter-default-option">
+                                <SelectValue placeholder="Default filter option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="equals">Equals</SelectItem>
+                                <SelectItem value="notEqual">Not Equal</SelectItem>
+                                <SelectItem value="lessThan">Before</SelectItem>
+                                <SelectItem value="greaterThan">After</SelectItem>
+                                <SelectItem value="inRange">In Range</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="date-filter-browser-picker" 
+                              checked={selectedColumn.filterParams?.browserDatePicker === true}
+                              onCheckedChange={(checked) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'filterParams', 
+                                { 
+                                  ...selectedColumn.filterParams,
+                                  browserDatePicker: checked === true ? true : false 
+                                }
+                              )}
+                            />
+                            <Label htmlFor="date-filter-browser-picker" className="text-sm">Use Browser Date Picker</Label>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="date-filter-min-year" className="mb-1.5 text-sm">Min Year</Label>
+                              <Input
+                                id="date-filter-min-year"
+                                type="number"
+                                value={(selectedColumn.filterParams?.minValidYear as number) || 1900}
+                                onChange={(e) => updateColumnProperty(
+                                  selectedColumn.colId || selectedColumn.field || '', 
+                                  'filterParams', 
+                                  { 
+                                    ...selectedColumn.filterParams,
+                                    minValidYear: parseInt(e.target.value) 
+                                  }
+                                )}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="date-filter-max-year" className="mb-1.5 text-sm">Max Year</Label>
+                              <Input
+                                id="date-filter-max-year"
+                                type="number"
+                                value={(selectedColumn.filterParams?.maxValidYear as number) || 2100}
+                                onChange={(e) => updateColumnProperty(
+                                  selectedColumn.colId || selectedColumn.field || '', 
+                                  'filterParams', 
+                                  { 
+                                    ...selectedColumn.filterParams,
+                                    maxValidYear: parseInt(e.target.value) 
+                                  }
+                                )}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Filter Parameters - Set Filter */}
+                      {selectedColumn.filterType === 'agSetColumnFilter' && (
+                        <div className="space-y-4 border-t pt-4">
+                          <h3 className="font-medium text-sm">Set Filter Parameters</h3>
+                          
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="set-filter-select-all" 
+                              checked={selectedColumn.filterParams?.selectAllOnMiniFilter === true}
+                              onCheckedChange={(checked) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'filterParams', 
+                                { 
+                                  ...selectedColumn.filterParams,
+                                  selectAllOnMiniFilter: checked === true ? true : false 
+                                }
+                              )}
+                            />
+                            <Label htmlFor="set-filter-select-all" className="text-sm">Select All on Mini Filter</Label>
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Checkbox 
+                              id="set-filter-search" 
+                              checked={selectedColumn.filterParams?.suppressMiniFilter !== true}
+                              onCheckedChange={(checked) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'filterParams', 
+                                { 
+                                  ...selectedColumn.filterParams,
+                                  suppressMiniFilter: checked === true ? false : true
+                                }
+                              )}
+                            />
+                            <Label htmlFor="set-filter-search" className="text-sm">Enable Search</Label>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Filter Parameters - Multi Filter */}
+                      {selectedColumn.filterType === 'agMultiColumnFilter' && (
+                        <div className="space-y-4 border-t pt-4">
+                          <h3 className="font-medium text-sm">Multi Filter Parameters</h3>
+                          <p className="text-xs text-muted-foreground">Multi-column filter combines multiple filter types.</p>
+                          
+                          <div>
+                            <Label className="mb-1.5 text-sm">Filter Types</Label>
+                            <div className="space-y-2">
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="multi-filter-text" 
+                                  checked={selectedColumn.filterParams?.filters?.some(f => f.filter === 'agTextColumnFilter')}
+                                  onCheckedChange={(checked) => {
+                                    const currentFilters = selectedColumn.filterParams?.filters || [];
+                                    let newFilters;
+                                    
+                                    if (checked) {
+                                      // Add text filter if not present
+                                      if (!currentFilters.some(f => f.filter === 'agTextColumnFilter')) {
+                                        newFilters = [...currentFilters, { filter: 'agTextColumnFilter' }];
+                                      } else {
+                                        newFilters = currentFilters;
+                                      }
+                                    } else {
+                                      // Remove text filter
+                                      newFilters = currentFilters.filter(f => f.filter !== 'agTextColumnFilter');
+                                    }
+                                    
+                                    updateColumnProperty(
+                                      selectedColumn.colId || selectedColumn.field || '', 
+                                      'filterParams', 
+                                      { 
+                                        ...selectedColumn.filterParams,
+                                        filters: newFilters
+                                      }
+                                    );
+                                  }}
+                                />
+                                <Label htmlFor="multi-filter-text" className="text-sm">Text Filter</Label>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="multi-filter-number" 
+                                  checked={selectedColumn.filterParams?.filters?.some(f => f.filter === 'agNumberColumnFilter')}
+                                  onCheckedChange={(checked) => {
+                                    const currentFilters = selectedColumn.filterParams?.filters || [];
+                                    let newFilters;
+                                    
+                                    if (checked) {
+                                      // Add number filter if not present
+                                      if (!currentFilters.some(f => f.filter === 'agNumberColumnFilter')) {
+                                        newFilters = [...currentFilters, { filter: 'agNumberColumnFilter' }];
+                                      } else {
+                                        newFilters = currentFilters;
+                                      }
+                                    } else {
+                                      // Remove number filter
+                                      newFilters = currentFilters.filter(f => f.filter !== 'agNumberColumnFilter');
+                                    }
+                                    
+                                    updateColumnProperty(
+                                      selectedColumn.colId || selectedColumn.field || '', 
+                                      'filterParams', 
+                                      { 
+                                        ...selectedColumn.filterParams,
+                                        filters: newFilters
+                                      }
+                                    );
+                                  }}
+                                />
+                                <Label htmlFor="multi-filter-number" className="text-sm">Number Filter</Label>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="multi-filter-date" 
+                                  checked={selectedColumn.filterParams?.filters?.some(f => f.filter === 'agDateColumnFilter')}
+                                  onCheckedChange={(checked) => {
+                                    const currentFilters = selectedColumn.filterParams?.filters || [];
+                                    let newFilters;
+                                    
+                                    if (checked) {
+                                      // Add date filter if not present
+                                      if (!currentFilters.some(f => f.filter === 'agDateColumnFilter')) {
+                                        newFilters = [...currentFilters, { filter: 'agDateColumnFilter' }];
+                                      } else {
+                                        newFilters = currentFilters;
+                                      }
+                                    } else {
+                                      // Remove date filter
+                                      newFilters = currentFilters.filter(f => f.filter !== 'agDateColumnFilter');
+                                    }
+                                    
+                                    updateColumnProperty(
+                                      selectedColumn.colId || selectedColumn.field || '', 
+                                      'filterParams', 
+                                      { 
+                                        ...selectedColumn.filterParams,
+                                        filters: newFilters
+                                      }
+                                    );
+                                  }}
+                                />
+                                <Label htmlFor="multi-filter-date" className="text-sm">Date Filter</Label>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <Checkbox 
+                                  id="multi-filter-set" 
+                                  checked={selectedColumn.filterParams?.filters?.some(f => f.filter === 'agSetColumnFilter')}
+                                  onCheckedChange={(checked) => {
+                                    const currentFilters = selectedColumn.filterParams?.filters || [];
+                                    let newFilters;
+                                    
+                                    if (checked) {
+                                      // Add set filter if not present
+                                      if (!currentFilters.some(f => f.filter === 'agSetColumnFilter')) {
+                                        newFilters = [...currentFilters, { filter: 'agSetColumnFilter' }];
+                                      } else {
+                                        newFilters = currentFilters;
+                                      }
+                                    } else {
+                                      // Remove set filter
+                                      newFilters = currentFilters.filter(f => f.filter !== 'agSetColumnFilter');
+                                    }
+                                    
+                                    updateColumnProperty(
+                                      selectedColumn.colId || selectedColumn.field || '', 
+                                      'filterParams', 
+                                      { 
+                                        ...selectedColumn.filterParams,
+                                        filters: newFilters
+                                      }
+                                    );
+                                  }}
+                                />
+                                <Label htmlFor="multi-filter-set" className="text-sm">Set Filter</Label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Common Filter Parameters */}
+                      <div className="space-y-4 border-t pt-4">
+                        <h3 className="font-medium text-sm">Common Filter Parameters</h3>
+                        
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="filter-buttons" 
+                            checked={selectedColumn.filterParams?.buttons !== undefined}
+                            onCheckedChange={(checked) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'filterParams', 
+                              { 
+                                ...selectedColumn.filterParams,
+                                buttons: checked === true ? ['apply', 'clear', 'reset', 'cancel'] : undefined
+                              }
+                            )}
+                          />
+                          <Label htmlFor="filter-buttons" className="text-sm">Show Filter Buttons</Label>
+                        </div>
+
+                        <div className="flex items-center space-x-2">
+                          <Checkbox 
+                            id="filter-close-on-apply" 
+                            checked={selectedColumn.filterParams?.closeOnApply === true}
+                            onCheckedChange={(checked) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'filterParams', 
+                              { 
+                                ...selectedColumn.filterParams,
+                                closeOnApply: checked === true ? true : false
+                              }
+                            )}
+                          />
+                          <Label htmlFor="filter-close-on-apply" className="text-sm">Close on Apply</Label>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="filter-debounce" className="mb-1.5 text-sm">Debounce (ms)</Label>
+                          <Input
+                            id="filter-debounce"
+                            type="number"
+                            value={(selectedColumn.filterParams?.debounceMs as number) || 500}
+                            onChange={(e) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'filterParams', 
+                              { 
+                                ...selectedColumn.filterParams,
+                                debounceMs: parseInt(e.target.value) 
+                              }
+                            )}
+                          />
+                        </div>
                       </div>
                     </div>
                   </div>
