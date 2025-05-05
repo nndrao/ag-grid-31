@@ -12,12 +12,11 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DirectColorPicker } from "@/components/ui/direct-color-picker";
 import { Slider } from "@/components/ui/slider";
-import { Search, Settings, Check, ChevronRight } from "lucide-react";
+import { Search, Settings, Check, ChevronRight, Info, HelpCircle } from "lucide-react";
 
 // Define interfaces for the component props and state
 interface ColumnSettingsDialogProps {
@@ -61,6 +60,9 @@ export function ColumnSettingsDialog({
   const [bulkUpdateMode, setBulkUpdateMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("header");
+  const [showFormatExamples, setShowFormatExamples] = useState(false);
+  const [customFormatValue, setCustomFormatValue] = useState("");
+  const [previewValue, setPreviewValue] = useState("1234.56");
 
   // Load columns when dialog opens
   useEffect(() => {
@@ -225,7 +227,7 @@ export function ColumnSettingsDialog({
           </div>
         </DialogHeader>
         
-        <div className="flex h-[600px] overflow-hidden">
+        <div className="flex h-[650px] overflow-hidden">
           {/* Column List Panel */}
           <div className="w-1/4 border-r">
             {/* Search Input */}
@@ -252,8 +254,10 @@ export function ColumnSettingsDialog({
                   {filteredColumns.map((column) => (
                     <div
                       key={column.colId || column.field}
-                      className={`flex items-center justify-between p-2 rounded cursor-pointer
-                        ${(selectedColumn?.colId === column.colId || selectedColumn?.field === column.field) ? 'bg-muted' : 'hover:bg-muted/50'}`}
+                      className={`flex items-center justify-between p-2 rounded cursor-pointer group relative
+                        ${(selectedColumn?.colId === column.colId || selectedColumn?.field === column.field) 
+                          ? 'bg-primary/15 border-l-4 border-primary shadow-sm' 
+                          : 'hover:bg-muted/70 hover:border-l-4 hover:border-primary/50'}`}
                       onClick={() => {
                         if (bulkUpdateMode) {
                           toggleColumnSelection(column.colId || column.field || '');
@@ -261,6 +265,7 @@ export function ColumnSettingsDialog({
                           handleSelectColumn(column);
                         }
                       }}
+                      title={`Field: ${column.field}`}
                     >
                       <div className="flex items-center space-x-2">
                         {bulkUpdateMode && (
@@ -270,32 +275,50 @@ export function ColumnSettingsDialog({
                               toggleColumnSelection(column.colId || column.field || '');
                             }}
                             onClick={(e) => e.stopPropagation()}
+                            className="border-2 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
                           />
                         )}
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium truncate max-w-[180px]">
+                          <span className={`text-sm font-medium truncate max-w-[180px] ${(selectedColumn?.colId === column.colId || selectedColumn?.field === column.field) ? 'text-primary' : ''}`}>
                             {column.headerName || column.field}
                           </span>
-                          <span className="text-xs text-muted-foreground truncate max-w-[180px]">
-                            {column.field}
-                          </span>
+                          {column.modified && (
+                            <span className="text-xs text-primary flex items-center">
+                              <div className="w-2 h-2 rounded-full bg-primary mr-1" />
+                              Modified
+                            </span>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center">
-                        {column.modified && (
-                          <div className="w-2 h-2 rounded-full bg-primary mr-2" title="Modified" />
-                        )}
                         {(selectedColumn?.colId === column.colId || selectedColumn?.field === column.field) && !bulkUpdateMode && (
-                          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          <ChevronRight className="h-4 w-4 text-primary" />
                         )}
+                        <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+                          <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                          <div className="absolute z-50 right-2 top-full mt-1 bg-popover text-popover-foreground text-xs rounded-md p-2 shadow-md border opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-48">
+                            <div className="font-medium mb-1">Column Details</div>
+                            <div><span className="font-medium">Field:</span> {column.field}</div>
+                            {column.colId && column.colId !== column.field && (
+                              <div><span className="font-medium">Column ID:</span> {column.colId}</div>
+                            )}
+                            <div><span className="font-medium">Type:</span> {column.type || 'string'}</div>
+                            {column.width && (
+                              <div><span className="font-medium">Width:</span> {column.width}px</div>
+                            )}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full text-center">
-                  <div className="p-4">
-                    <p className="text-sm text-muted-foreground">No columns found</p>
+                  <div>
+                    <div className="mb-2">
+                      <Settings className="h-10 w-10 mx-auto opacity-20" />
+                    </div>
+                    <p className="text-sm">No columns found</p>
                   </div>
                 </div>
               )}
@@ -306,11 +329,11 @@ export function ColumnSettingsDialog({
           <div className="w-3/4">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full h-full flex flex-col">
               <TabsList className="w-full justify-start px-4 border-b rounded-none">
-                <TabsTrigger value="header">Header</TabsTrigger>
-                <TabsTrigger value="cell">Cell</TabsTrigger>
-                <TabsTrigger value="formatter">Formatter</TabsTrigger>
-                <TabsTrigger value="filter">Filter</TabsTrigger>
-                <TabsTrigger value="editors">Editors</TabsTrigger>
+                <TabsTrigger value="header" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-sm">Header</TabsTrigger>
+                <TabsTrigger value="cell" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-sm">Cell</TabsTrigger>
+                <TabsTrigger value="formatter" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-sm">Formatter</TabsTrigger>
+                <TabsTrigger value="filter" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-sm">Filter</TabsTrigger>
+                <TabsTrigger value="editors" className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-sm">Editors</TabsTrigger>
               </TabsList>
               
               {/* Header Tab */}
@@ -330,9 +353,11 @@ export function ColumnSettingsDialog({
                           )}
                         />
                       </div>
-                      <div className="bg-muted/50 rounded-md p-2 text-center text-sm flex-1">
-                        <div className="font-medium">
-                          Header Preview
+                      <div className="flex-1">
+                        <div className="bg-muted/50 rounded-md border h-10 flex items-center justify-center">
+                          <div className="font-medium text-sm">
+                            Header Preview
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -340,7 +365,7 @@ export function ColumnSettingsDialog({
                     <div className="space-y-6">
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
-                          <Label htmlFor="header-font-family" className="mb-1.5">Font Family</Label>
+                          <Label htmlFor="header-font-family" className="mb-1.5 font-medium text-foreground">Font Family</Label>
                           <Select
                             value={selectedColumn.headerComponentParams?.fontFamily || "default"}
                             onValueChange={(value) => updateColumnProperty(
@@ -365,7 +390,7 @@ export function ColumnSettingsDialog({
                         </div>
                         
                         <div className="space-y-1.5">
-                          <Label htmlFor="header-font-size" className="mb-1.5">Font Size</Label>
+                          <Label htmlFor="header-font-size" className="mb-1.5 font-medium text-foreground">Font Size</Label>
                           <Select
                             value={selectedColumn.headerComponentParams?.fontSize || "default"}
                             onValueChange={(value) => updateColumnProperty(
@@ -392,7 +417,7 @@ export function ColumnSettingsDialog({
                       
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
-                          <Label htmlFor="header-font-weight" className="mb-1.5">Font Weight</Label>
+                          <Label htmlFor="header-font-weight" className="mb-1.5 font-medium text-foreground">Font Weight</Label>
                           <Select
                             value={selectedColumn.headerComponentParams?.fontWeight || "default"}
                             onValueChange={(value) => updateColumnProperty(
@@ -415,7 +440,7 @@ export function ColumnSettingsDialog({
                         </div>
                         
                         <div className="space-y-1.5">
-                          <Label htmlFor="header-text-style" className="mb-1.5">Text Style</Label>
+                          <Label className="mb-1.5 font-medium text-foreground">Text Style</Label>
                           <div className="flex gap-2 mt-2">
                             <Button
                               type="button"
@@ -466,7 +491,7 @@ export function ColumnSettingsDialog({
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center">
-                            <Label htmlFor="header-text-color" className="mb-1.5">Text Color</Label>
+                            <Label htmlFor="header-text-color" className="mb-1.5 font-medium text-foreground">Text Color</Label>
                             <div className="flex items-center">
                               <Checkbox 
                                 id="header-text-color-apply" 
@@ -505,7 +530,7 @@ export function ColumnSettingsDialog({
                         
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center">
-                            <Label htmlFor="header-bg-color" className="mb-1.5">Background</Label>
+                            <Label htmlFor="header-bg-color" className="mb-1.5 font-medium text-foreground">Background</Label>
                             <div className="flex items-center">
                               <Checkbox 
                                 id="header-bg-color-apply" 
@@ -581,7 +606,7 @@ export function ColumnSettingsDialog({
                       
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
-                          <Label htmlFor="header-border-style" className="mb-1.5">Style</Label>
+                          <Label htmlFor="header-border-style" className="mb-1.5 font-medium text-foreground">Style</Label>
                           <Select 
                             value={(selectedColumn.headerComponentParams?.borderStyle as string) || "none"}
                             onValueChange={(value) => updateColumnProperty(
@@ -603,7 +628,7 @@ export function ColumnSettingsDialog({
                         </div>
                         
                         <div className="space-y-1.5">
-                          <Label htmlFor="header-border-sides" className="mb-1.5">Sides</Label>
+                          <Label htmlFor="header-border-sides" className="mb-1.5 font-medium text-foreground">Sides</Label>
                           <Select 
                             value={(selectedColumn.headerComponentParams?.borderSides as string) || "all"}
                             onValueChange={(value) => updateColumnProperty(
@@ -628,7 +653,7 @@ export function ColumnSettingsDialog({
                       
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
-                          <Label htmlFor="header-border-width" className="mb-1.5">Width: {selectedColumn.headerComponentParams?.borderWidth || '1px'}</Label>
+                          <Label htmlFor="header-border-width" className="mb-1.5 font-medium text-foreground">Width: {selectedColumn.headerComponentParams?.borderWidth || '1px'}</Label>
                           <Slider 
                             id="header-border-width"
                             min={1}
@@ -645,7 +670,7 @@ export function ColumnSettingsDialog({
                         
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center">
-                            <Label htmlFor="header-border-color" className="mb-1.5">Color</Label>
+                            <Label htmlFor="header-border-color" className="mb-1.5 font-medium text-foreground">Color</Label>
                             <div className="flex items-center">
                               <Checkbox 
                                 id="header-border-color-apply" 
@@ -709,7 +734,7 @@ export function ColumnSettingsDialog({
                     <div className="space-y-6">
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
-                          <Label htmlFor="cell-font-family" className="mb-1.5">Font Family</Label>
+                          <Label htmlFor="cell-font-family" className="mb-1.5 font-medium text-foreground">Font Family</Label>
                           <Select
                             value={selectedColumn.cellComponentParams?.fontFamily || "default"}
                             onValueChange={(value) => updateColumnProperty(
@@ -734,7 +759,7 @@ export function ColumnSettingsDialog({
                         </div>
                         
                         <div className="space-y-1.5">
-                          <Label htmlFor="cell-font-size" className="mb-1.5">Font Size</Label>
+                          <Label htmlFor="cell-font-size" className="mb-1.5 font-medium text-foreground">Font Size</Label>
                           <Select
                             value={selectedColumn.cellComponentParams?.fontSize || "default"}
                             onValueChange={(value) => updateColumnProperty(
@@ -761,7 +786,7 @@ export function ColumnSettingsDialog({
                       
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
-                          <Label htmlFor="cell-font-weight" className="mb-1.5">Font Weight</Label>
+                          <Label htmlFor="cell-font-weight" className="mb-1.5 font-medium text-foreground">Font Weight</Label>
                           <Select
                             value={selectedColumn.cellComponentParams?.fontWeight || "default"}
                             onValueChange={(value) => updateColumnProperty(
@@ -784,7 +809,7 @@ export function ColumnSettingsDialog({
                         </div>
                         
                         <div className="space-y-1.5">
-                          <Label htmlFor="cell-text-style" className="mb-1.5">Text Style</Label>
+                          <Label className="mb-1.5 font-medium text-foreground">Text Style</Label>
                           <div className="flex gap-2 mt-2">
                             <Button
                               type="button"
@@ -835,7 +860,7 @@ export function ColumnSettingsDialog({
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center">
-                            <Label htmlFor="cell-text-color" className="mb-1.5">Text Color</Label>
+                            <Label htmlFor="cell-text-color" className="mb-1.5 font-medium text-foreground">Text Color</Label>
                             <div className="flex items-center">
                               <Checkbox 
                                 id="cell-text-color-apply" 
@@ -874,7 +899,7 @@ export function ColumnSettingsDialog({
                         
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center">
-                            <Label htmlFor="cell-bg-color" className="mb-1.5">Background</Label>
+                            <Label htmlFor="cell-bg-color" className="mb-1.5 font-medium text-foreground">Background</Label>
                             <div className="flex items-center">
                               <Checkbox 
                                 id="cell-bg-color-apply" 
@@ -950,7 +975,7 @@ export function ColumnSettingsDialog({
                       
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
-                          <Label htmlFor="cell-border-style" className="mb-1.5">Style</Label>
+                          <Label htmlFor="cell-border-style" className="mb-1.5 font-medium text-foreground">Style</Label>
                           <Select 
                             value={(selectedColumn.cellComponentParams?.borderStyle as string) || "none"}
                             onValueChange={(value) => updateColumnProperty(
@@ -972,7 +997,7 @@ export function ColumnSettingsDialog({
                         </div>
                         
                         <div className="space-y-1.5">
-                          <Label htmlFor="cell-border-sides" className="mb-1.5">Sides</Label>
+                          <Label htmlFor="cell-border-sides" className="mb-1.5 font-medium text-foreground">Sides</Label>
                           <Select 
                             value={(selectedColumn.cellComponentParams?.borderSides as string) || "all"}
                             onValueChange={(value) => updateColumnProperty(
@@ -997,7 +1022,7 @@ export function ColumnSettingsDialog({
                       
                       <div className="grid grid-cols-2 gap-4 items-start">
                         <div className="space-y-1.5">
-                          <Label htmlFor="cell-border-width" className="mb-1.5">Width: {selectedColumn.cellComponentParams?.borderWidth || '1px'}</Label>
+                          <Label htmlFor="cell-border-width" className="mb-1.5 font-medium text-foreground">Width: {selectedColumn.cellComponentParams?.borderWidth || '1px'}</Label>
                           <Slider 
                             id="cell-border-width"
                             min={1}
@@ -1014,7 +1039,7 @@ export function ColumnSettingsDialog({
                         
                         <div className="space-y-1.5">
                           <div className="flex justify-between items-center">
-                            <Label htmlFor="cell-border-color" className="mb-1.5">Color</Label>
+                            <Label htmlFor="cell-border-color" className="mb-1.5 font-medium text-foreground">Color</Label>
                             <div className="flex items-center">
                               <Checkbox 
                                 id="cell-border-color-apply" 
@@ -1077,14 +1102,25 @@ export function ColumnSettingsDialog({
                     
                     <div className="space-y-6">
                       <div>
-                        <Label htmlFor="formatter" className="mb-1.5">Formatter Type</Label>
+                        <Label htmlFor="formatter" className="mb-1.5 font-medium text-foreground">Formatter Type</Label>
                         <Select
                           value={(selectedColumn.type as string) || 'none'}
-                          onValueChange={(value) => updateColumnProperty(
-                            selectedColumn.colId || selectedColumn.field || '', 
-                            'type', 
-                            value === 'none' ? undefined : value
-                          )}
+                          onValueChange={(value) => {
+                            updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'type', 
+                              value === 'none' ? undefined : value
+                            );
+                            if (value === 'custom') {
+                              setCustomFormatValue(
+                                typeof selectedColumn.valueFormatter === 'object' && 
+                                selectedColumn.valueFormatter !== null && 
+                                selectedColumn.valueFormatter.params && 
+                                typeof selectedColumn.valueFormatter.params.formatString === 'string' ? 
+                                selectedColumn.valueFormatter.params.formatString : "[>0][Green]\"$\"#,##0.00;[<0][Red]\"$\"#,##0.00;$0.00"
+                              );
+                            }
+                          }}
                         >
                           <SelectTrigger id="formatter">
                             <SelectValue placeholder="Select formatter" />
@@ -1094,13 +1130,15 @@ export function ColumnSettingsDialog({
                             <SelectItem value="number">Number</SelectItem>
                             <SelectItem value="date">Date</SelectItem>
                             <SelectItem value="currency">Currency</SelectItem>
+                            <SelectItem value="percent">Percent</SelectItem>
+                            <SelectItem value="custom">Custom</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                       
                       {selectedColumn.type === 'number' && (
                         <div>
-                          <Label htmlFor="precision" className="mb-1.5">Decimal Precision</Label>
+                          <Label htmlFor="precision" className="mb-1.5 font-medium text-foreground">Decimal Precision</Label>
                           <Input
                             id="precision"
                             type="number"
@@ -1122,6 +1160,503 @@ export function ColumnSettingsDialog({
                               }
                             )}
                           />
+                        </div>
+                      )}
+
+                      {selectedColumn.type === 'date' && (
+                        <div>
+                          <Label htmlFor="dateFormat" className="mb-1.5 font-medium text-foreground">Date Format</Label>
+                          <Select
+                            value={
+                              typeof selectedColumn.valueFormatter === 'object' && 
+                              selectedColumn.valueFormatter !== null && 
+                              selectedColumn.valueFormatter.params && 
+                              typeof selectedColumn.valueFormatter.params.format === 'string' ? 
+                              selectedColumn.valueFormatter.params.format : "MM/DD/YYYY"
+                            }
+                            onValueChange={(value) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'valueFormatter', 
+                              { 
+                                function: 'dateFormatter', 
+                                params: { format: value } 
+                              }
+                            )}
+                          >
+                            <SelectTrigger id="dateFormat">
+                              <SelectValue placeholder="Select date format" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="MM/DD/YYYY">MM/DD/YYYY</SelectItem>
+                              <SelectItem value="DD/MM/YYYY">DD/MM/YYYY</SelectItem>
+                              <SelectItem value="YYYY-MM-DD">YYYY-MM-DD</SelectItem>
+                              <SelectItem value="MMM DD, YYYY">MMM DD, YYYY</SelectItem>
+                              <SelectItem value="DD MMM YYYY">DD MMM YYYY</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {selectedColumn.type === 'currency' && (
+                        <>
+                          <div>
+                            <Label htmlFor="currencySymbol" className="mb-1.5 font-medium text-foreground">Currency Symbol</Label>
+                            <Select
+                              value={
+                                typeof selectedColumn.valueFormatter === 'object' && 
+                                selectedColumn.valueFormatter !== null && 
+                                selectedColumn.valueFormatter.params && 
+                                typeof selectedColumn.valueFormatter.params.currency === 'string' ? 
+                                selectedColumn.valueFormatter.params.currency : "$"
+                              }
+                              onValueChange={(value) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'valueFormatter', 
+                                { 
+                                  function: 'currencyFormatter', 
+                                  params: { 
+                                    currency: value,
+                                    precision: 
+                                      typeof selectedColumn.valueFormatter === 'object' && 
+                                      selectedColumn.valueFormatter !== null && 
+                                      selectedColumn.valueFormatter.params && 
+                                      typeof selectedColumn.valueFormatter.params.precision === 'number' ? 
+                                      selectedColumn.valueFormatter.params.precision : 2,
+                                    position: 
+                                      typeof selectedColumn.valueFormatter === 'object' && 
+                                      selectedColumn.valueFormatter !== null && 
+                                      selectedColumn.valueFormatter.params && 
+                                      typeof selectedColumn.valueFormatter.params.position === 'string' ? 
+                                      selectedColumn.valueFormatter.params.position : "before"
+                                  } 
+                                }
+                              )}
+                            >
+                              <SelectTrigger id="currencySymbol">
+                                <SelectValue placeholder="Select currency symbol" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="$">$</SelectItem>
+                                <SelectItem value="€">€</SelectItem>
+                                <SelectItem value="£">£</SelectItem>
+                                <SelectItem value="¥">¥</SelectItem>
+                                <SelectItem value="₹">₹</SelectItem>
+                                <SelectItem value="₽">₽</SelectItem>
+                                <SelectItem value="R$">R$</SelectItem>
+                                <SelectItem value="kr">kr</SelectItem>
+                                <SelectItem value="฿">฿</SelectItem>
+                                <SelectItem value="₩">₩</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div>
+                            <Label htmlFor="decimalPlaces" className="mb-1.5 font-medium text-foreground">Decimal Places</Label>
+                            <Input
+                              id="decimalPlaces"
+                              type="number"
+                              min={0}
+                              max={10}
+                              value={
+                                typeof selectedColumn.valueFormatter === 'object' && 
+                                selectedColumn.valueFormatter !== null && 
+                                selectedColumn.valueFormatter.params && 
+                                typeof selectedColumn.valueFormatter.params.precision === 'number' ? 
+                                selectedColumn.valueFormatter.params.precision : 2
+                              }
+                              onChange={(e) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'valueFormatter', 
+                                { 
+                                  function: 'currencyFormatter', 
+                                  params: { 
+                                    precision: parseInt(e.target.value),
+                                    currency: 
+                                      typeof selectedColumn.valueFormatter === 'object' && 
+                                      selectedColumn.valueFormatter !== null && 
+                                      selectedColumn.valueFormatter.params && 
+                                      typeof selectedColumn.valueFormatter.params.currency === 'string' ? 
+                                      selectedColumn.valueFormatter.params.currency : "$",
+                                    position: 
+                                      typeof selectedColumn.valueFormatter === 'object' && 
+                                      selectedColumn.valueFormatter !== null && 
+                                      selectedColumn.valueFormatter.params && 
+                                      typeof selectedColumn.valueFormatter.params.position === 'string' ? 
+                                      selectedColumn.valueFormatter.params.position : "before"
+                                  } 
+                                }
+                              )}
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="symbolPosition" className="mb-1.5 font-medium text-foreground">Symbol Position</Label>
+                            <Select
+                              value={
+                                typeof selectedColumn.valueFormatter === 'object' && 
+                                selectedColumn.valueFormatter !== null && 
+                                selectedColumn.valueFormatter.params && 
+                                typeof selectedColumn.valueFormatter.params.position === 'string' ? 
+                                selectedColumn.valueFormatter.params.position : "before"
+                              }
+                              onValueChange={(value) => updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'valueFormatter', 
+                                { 
+                                  function: 'currencyFormatter', 
+                                  params: { 
+                                    position: value,
+                                    currency: 
+                                      typeof selectedColumn.valueFormatter === 'object' && 
+                                      selectedColumn.valueFormatter !== null && 
+                                      selectedColumn.valueFormatter.params && 
+                                      typeof selectedColumn.valueFormatter.params.currency === 'string' ? 
+                                      selectedColumn.valueFormatter.params.currency : "$",
+                                    precision: 
+                                      typeof selectedColumn.valueFormatter === 'object' && 
+                                      selectedColumn.valueFormatter !== null && 
+                                      selectedColumn.valueFormatter.params && 
+                                      typeof selectedColumn.valueFormatter.params.precision === 'number' ? 
+                                      selectedColumn.valueFormatter.params.precision : 2
+                                  } 
+                                }
+                              )}
+                            >
+                              <SelectTrigger id="symbolPosition">
+                                <SelectValue placeholder="Select symbol position" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="before">Before ($100)</SelectItem>
+                                <SelectItem value="after">After (100$)</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </>
+                      )}
+
+                      {selectedColumn.type === 'percent' && (
+                        <div>
+                          <Label htmlFor="percentPrecision" className="mb-1.5 font-medium text-foreground">Decimal Places</Label>
+                          <Input
+                            id="percentPrecision"
+                            type="number"
+                            min={0}
+                            max={10}
+                            value={
+                              typeof selectedColumn.valueFormatter === 'object' && 
+                              selectedColumn.valueFormatter !== null && 
+                              selectedColumn.valueFormatter.params && 
+                              typeof selectedColumn.valueFormatter.params.precision === 'number' ? 
+                              selectedColumn.valueFormatter.params.precision : 2
+                            }
+                            onChange={(e) => updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'valueFormatter', 
+                              { 
+                                function: 'percentFormatter', 
+                                params: { precision: parseInt(e.target.value) } 
+                              }
+                            )}
+                          />
+                        </div>
+                      )}
+
+                      {selectedColumn.type === 'custom' && (
+                        <div className="space-y-4">
+                          <div className="flex space-x-2">
+                            <Button 
+                              type="button" 
+                              variant={!showFormatExamples ? "default" : "outline"}
+                              className="flex-1"
+                              onClick={() => setShowFormatExamples(false)}
+                            >
+                              Format Editor
+                            </Button>
+                            <Button 
+                              type="button" 
+                              variant={showFormatExamples ? "default" : "outline"}
+                              className="flex-1"
+                              onClick={() => setShowFormatExamples(true)}
+                            >
+                              Examples
+                            </Button>
+                          </div>
+
+                          {!showFormatExamples ? (
+                            <>
+                              <div>
+                                <Label htmlFor="customFormat" className="mb-1.5 font-medium text-foreground">Custom Format</Label>
+                                <div className="relative">
+                                  <Input
+                                    id="customFormat"
+                                    value={customFormatValue}
+                                    onChange={(e) => {
+                                      setCustomFormatValue(e.target.value);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: e.target.value } 
+                                        }
+                                      );
+                                    }}
+                                  />
+                                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-muted-foreground">
+                                    <HelpCircle className="h-4 w-4" />
+                                  </div>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">Supports Excel-like formats. Click the ? for help.</p>
+                              </div>
+
+                              <div>
+                                <Label htmlFor="previewValue" className="mb-1.5 font-medium text-foreground">Preview Value:</Label>
+                                <Input
+                                  id="previewValue"
+                                  value={previewValue}
+                                  onChange={(e) => setPreviewValue(e.target.value)}
+                                />
+                              </div>
+
+                              <div>
+                                <Label className="mb-1.5 font-medium text-foreground">Preview:</Label>
+                                <div className="p-3 border rounded-md bg-muted/30 min-h-[40px]">
+                                  {/* Preview would go here - in a real implementation this would format the preview value using the custom format */}
+                                  <div className="text-green-500">$1,234.56</div>
+                                </div>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="space-y-4">
+                              <p className="text-sm">Click an example to apply it:</p>
+                              
+                              <div className="space-y-4">
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="flex justify-between items-center bg-muted p-2 border-b">
+                                    <span className="font-medium">Color & Conditionals</span>
+                                    <Button size="sm" variant="secondary" onClick={() => {
+                                      const format = "[&gt;0][Green]\"$\"#,##0.00;[&lt;0][Red]\"$\"#,##0.00;$0.00";
+                                      setCustomFormatValue(format);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: format } 
+                                        }
+                                      );
+                                      setShowFormatExamples(false);
+                                    }}>
+                                      Apply
+                                    </Button>
+                                  </div>
+                                  <div className="p-3 text-sm">
+                                    <div className="font-mono text-xs mb-2">[&gt;0][Green]"$"#,##0.00;[&lt;0][Red]"$"#,##0.00;$0.00</div>
+                                    <div className="flex space-x-4">
+                                      <div>1234.56: <span className="text-green-500">$1,234.56</span></div>
+                                      <div>-1234.56: <span className="text-red-500">$-1,234.56</span></div>
+                                      <div>0: <span>$0.00</span></div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="flex justify-between items-center bg-muted p-2 border-b">
+                                    <span className="font-medium">Status Indicators</span>
+                                    <Button size="sm" variant="secondary" onClick={() => {
+                                      const format = "[=1][Green]\"✓\";[=0][Red]\"✗\";\"N/A\"";
+                                      setCustomFormatValue(format);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: format } 
+                                        }
+                                      );
+                                      setShowFormatExamples(false);
+                                    }}>
+                                      Apply
+                                    </Button>
+                                  </div>
+                                  <div className="p-3 text-sm">
+                                    <div className="font-mono text-xs mb-2">[=1][Green]"✓";[=0][Red]"✗";"N/A"</div>
+                                    <div className="flex space-x-4">
+                                      <div>1: <span className="text-green-500">✓</span></div>
+                                      <div>0: <span className="text-red-500">✗</span></div>
+                                      <div>2: <span>N/A</span></div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="flex justify-between items-center bg-muted p-2 border-b">
+                                    <span className="font-medium">Score Ranges</span>
+                                    <Button size="sm" variant="secondary" onClick={() => {
+                                      const format = "[&gt;=90][#00B800]0\"%\";[&gt;=70][#007C00]0\"%\";[#FF0000]0\"%\"";
+                                      setCustomFormatValue(format);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: format } 
+                                        }
+                                      );
+                                      setShowFormatExamples(false);
+                                    }}>
+                                      Apply
+                                    </Button>
+                                  </div>
+                                  <div className="p-3 text-sm">
+                                    <div className="font-mono text-xs mb-2">[&gt;=90][#00B800]0"%";[&gt;=70][#007C00]0"%";[#FF0000]0"%"</div>
+                                    <div className="flex space-x-4">
+                                      <div>95: <span className="text-[#00B800]">95%</span></div>
+                                      <div>75: <span className="text-[#007C00]">75%</span></div>
+                                      <div>65: <span className="text-[#FF0000]">65%</span></div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="flex justify-between items-center bg-muted p-2 border-b">
+                                    <span className="font-medium">KPI Indicators</span>
+                                    <Button size="sm" variant="secondary" onClick={() => {
+                                      const format = "[&gt;100][Green]\"✓ Above Target\";[=100][Blue]\"= On Target\";[Red]\"✗ Below Target\"";
+                                      setCustomFormatValue(format);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: format } 
+                                        }
+                                      );
+                                      setShowFormatExamples(false);
+                                    }}>
+                                      Apply
+                                    </Button>
+                                  </div>
+                                  <div className="p-3 text-sm">
+                                    <div className="font-mono text-xs mb-2">[&gt;100][Green]"✓ Above Target";[=100][Blue]"= On Target";[Red]"✗ Below Target"</div>
+                                    <div className="flex space-x-4">
+                                      <div>110: <span className="text-green-500">✓ Above Target</span></div>
+                                      <div>100: <span className="text-blue-500">= On Target</span></div>
+                                      <div>90: <span className="text-red-500">✗ Below Target</span></div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="flex justify-between items-center bg-muted p-2 border-b">
+                                    <span className="font-medium">Simple Heatmap</span>
+                                    <Button size="sm" variant="secondary" onClick={() => {
+                                      const format = "[&gt;0.7][#009900]0\"%\";[&gt;0.3][#FFCC00]0\"%\";[#FF0000]0\"%\"";
+                                      setCustomFormatValue(format);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: format } 
+                                        }
+                                      );
+                                      setShowFormatExamples(false);
+                                    }}>
+                                      Apply
+                                    </Button>
+                                  </div>
+                                  <div className="p-3 text-sm">
+                                    <div className="font-mono text-xs mb-2">[&gt;0.7][#009900]0"%";[&gt;0.3][#FFCC00]0"%";[#FF0000]0"%"</div>
+                                    <div className="flex space-x-4">
+                                      <div>0.8: <span className="text-[#009900]">80.0%</span></div>
+                                      <div>0.5: <span className="text-[#FFCC00]">50.0%</span></div>
+                                      <div>0.2: <span className="text-[#FF0000]">20.0%</span></div>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="flex justify-between items-center bg-muted p-2 border-b">
+                                    <span className="font-medium">Text with Values</span>
+                                    <Button size="sm" variant="secondary" onClick={() => {
+                                      const format = "{value} units";
+                                      setCustomFormatValue(format);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: format } 
+                                        }
+                                      );
+                                      setShowFormatExamples(false);
+                                    }}>
+                                      Apply
+                                    </Button>
+                                  </div>
+                                  <div className="p-3 text-sm">
+                                    <div className="font-mono text-xs mb-2">{"{value} units"}</div>
+                                    <div>42: <span>42 units</span></div>
+                                  </div>
+                                </div>
+
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="flex justify-between items-center bg-muted p-2 border-b">
+                                    <span className="font-medium">Currency with Suffix</span>
+                                    <Button size="sm" variant="secondary" onClick={() => {
+                                      const format = "\"$\"#,##0.00\" USD\"";
+                                      setCustomFormatValue(format);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: format } 
+                                        }
+                                      );
+                                      setShowFormatExamples(false);
+                                    }}>
+                                      Apply
+                                    </Button>
+                                  </div>
+                                  <div className="p-3 text-sm">
+                                    <div className="font-mono text-xs mb-2">"$"#,##0.00" USD"</div>
+                                    <div>1234.56: <span>$1,234.56 USD</span></div>
+                                  </div>
+                                </div>
+
+                                <div className="border rounded-md overflow-hidden">
+                                  <div className="flex justify-between items-center bg-muted p-2 border-b">
+                                    <span className="font-medium">Conditional Prefix</span>
+                                    <Button size="sm" variant="secondary" onClick={() => {
+                                      const format = "[&gt;0]\"Profit: \";[&lt;0]\"Loss: \";\"Break-even\"";
+                                      setCustomFormatValue(format);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '', 
+                                        'valueFormatter', 
+                                        { 
+                                          function: 'customFormatter', 
+                                          params: { formatString: format } 
+                                        }
+                                      );
+                                      setShowFormatExamples(false);
+                                    }}>
+                                      Apply
+                                    </Button>
+                                  </div>
+                                  <div className="p-3 text-sm">
+                                    <div className="font-mono text-xs mb-2">[&gt;0]"Profit: ";[&lt;0]"Loss: ";"Break-even"</div>
+                                    <div className="flex space-x-4">
+                                      <div>100: <span>Profit: 100</span></div>
+                                      <div>-50: <span>Loss: -50</span></div>
+                                      <div>0: <span>Break-even</span></div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -1150,7 +1685,7 @@ export function ColumnSettingsDialog({
                     
                     <div className="space-y-6">
                       <div>
-                        <Label htmlFor="filter-type" className="mb-1.5">Filter Type</Label>
+                        <Label htmlFor="filter-type" className="mb-1.5 font-medium text-foreground">Filter Type</Label>
                         <Select
                           value={selectedColumn.filterType || 'auto'}
                           onValueChange={(value) => updateColumnProperty(
@@ -1196,7 +1731,7 @@ export function ColumnSettingsDialog({
                     
                     <div className="space-y-6">
                       <div>
-                        <Label htmlFor="editor-type" className="mb-1.5">Editor Type</Label>
+                        <Label htmlFor="editor-type" className="mb-1.5 font-medium text-foreground">Editor Type</Label>
                         <Select
                           value={selectedColumn.editable ? 'default' : 'none'}
                           onValueChange={(value) => updateColumnProperty(
@@ -1234,13 +1769,12 @@ export function ColumnSettingsDialog({
           </div>
         </div>
         
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>
+        <DialogFooter className="border-t p-4">
+          <Button variant="outline" onClick={() => setOpen(false)} className="border-2">
             Cancel
           </Button>
-          <Button onClick={applyChanges}>
-            <Check className="mr-2 h-4 w-4" />
-            Apply Changes
+          <Button onClick={applyChanges} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Check className="mr-2 h-4 w-4" /> Apply Changes
           </Button>
         </DialogFooter>
       </DialogContent>

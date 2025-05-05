@@ -1,0 +1,155 @@
+/* Global Shadcn UI Component Styles
+   These styles enhance the Shadcn UI components to better match AG-Grid v33+ styling
+   and improve overall UI clarity and interaction feedback.
+*/
+
+/* Dialog Components */
+.dialog-content {
+  border-color: hsl(var(--border));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Tabs Components */
+.tabs-trigger[data-state="active"] {
+  background-color: hsl(var(--primary) / 0.2);
+  color: hsl(var(--primary));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-weight: 500;
+}
+
+.tabs-list {
+  border-bottom: 1px solid hsl(var(--border));
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* List Items & Selection */
+.selectable-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-bottom: 2px;
+  border-left: 4px solid transparent;
+  position: relative;
+}
+
+.selectable-item:hover {
+  background-color: hsl(var(--secondary));
+  border-left-color: hsl(var(--primary) / 0.7);
+}
+
+.selectable-item.selected {
+  background-color: hsl(var(--primary) / 0.15);
+  border-left-color: hsl(var(--primary));
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.selectable-item.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background-color: hsl(var(--primary));
+}
+
+.selectable-item.selected .item-title {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+.selectable-item .item-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.selectable-item .item-subtitle {
+  font-size: 0.75rem;
+  color: hsl(var(--muted-foreground));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.selectable-item .modified-indicator {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 9999px;
+  background-color: hsl(var(--primary));
+  margin-right: 0.5rem;
+}
+
+/* Form Elements */
+.form-label {
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.375rem;
+  display: block;
+}
+
+.preview-box {
+  background-color: hsl(var(--muted) / 0.5);
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.375rem;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.preview-box-title {
+  font-weight: 500;
+  border-bottom: 1px solid hsl(var(--border));
+  padding-bottom: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+/* Checkbox Enhancements */
+.checkbox-enhanced {
+  border-width: 2px;
+}
+
+.checkbox-enhanced[data-state="checked"] {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+/* Button Enhancements */
+.button-cancel {
+  border-width: 2px;
+}
+
+.button-primary {
+  background-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.button-primary:hover {
+  background-color: hsl(var(--primary) / 0.9);
+}
+
+/* Dialog Footer */
+.dialog-footer {
+  border-top: 1px solid hsl(var(--border));
+  padding: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+/* Icon Styling */
+.icon-primary {
+  color: hsl(var(--primary));
+}
+
+.icon-muted {
+  color: hsl(var(--muted-foreground));
+}
