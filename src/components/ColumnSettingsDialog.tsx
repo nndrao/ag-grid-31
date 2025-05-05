@@ -16,6 +16,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DirectColorPicker } from "@/components/ui/direct-color-picker";
 import { Slider } from "@/components/ui/slider";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 import { Search, Settings, Check, ChevronRight, Info, HelpCircle } from "lucide-react";
 
 // Define interfaces for the component props and state
@@ -342,20 +348,28 @@ export function ColumnSettingsDialog({
                         {(selectedColumn?.colId === column.colId || selectedColumn?.field === column.field) && !bulkUpdateMode && (
                           <ChevronRight className="h-4 w-4 text-primary" />
                         )}
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-                          <Info className="h-3.5 w-3.5 text-muted-foreground" />
-                          <div className="absolute z-50 right-2 top-full mt-1 bg-popover text-popover-foreground text-xs rounded-md p-2 shadow-md border opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none w-48">
-                            <div className="font-medium mb-1">Column Details</div>
-                            <div><span className="font-medium">Field:</span> {column.field}</div>
-                            {column.colId && column.colId !== column.field && (
-                              <div><span className="font-medium">Column ID:</span> {column.colId}</div>
-                            )}
-                            <div><span className="font-medium">Type:</span> {column.type || 'string'}</div>
-                            {column.width && (
-                              <div><span className="font-medium">Width:</span> {column.width}px</div>
-                            )}
-                          </div>
-                        </div>
+                        <TooltipProvider>
+                          <Tooltip delayDuration={300}>
+                            <TooltipTrigger asChild>
+                              <div className="ml-1 cursor-help">
+                                <Info className="h-3.5 w-3.5 text-muted-foreground" />
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" align="start" className="max-w-xs">
+                              <div className="text-xs">
+                                <div className="font-medium mb-1">Column Details</div>
+                                <div><span className="font-medium">Field:</span> {column.field}</div>
+                                {column.colId && column.colId !== column.field && (
+                                  <div><span className="font-medium">Column ID:</span> {column.colId}</div>
+                                )}
+                                <div><span className="font-medium">Type:</span> {column.type || 'string'}</div>
+                                {column.width && (
+                                  <div><span className="font-medium">Width:</span> {column.width}px</div>
+                                )}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </div>
                     </div>
                   ))}
