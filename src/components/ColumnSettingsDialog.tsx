@@ -77,6 +77,16 @@ interface ExtendedColDef extends ColDef {
     
     [key: string]: any;
   };
+  
+  // Editor properties
+  cellEditorType?: string;
+  cellEditorParams?: {
+    // Select editor params
+    values?: any[];
+    valueSource?: 'csv' | 'json' | 'rest';
+    valueSourceData?: string;
+    [key: string]: any;
+  };
 }
 
 // Define the component
@@ -95,6 +105,9 @@ export function ColumnSettingsDialog({
   const [showFormatExamples, setShowFormatExamples] = useState(false);
   const [customFormatValue, setCustomFormatValue] = useState("");
   const [previewValue, setPreviewValue] = useState("1234.56");
+  const [selectValueSource, setSelectValueSource] = useState<'csv' | 'json' | 'rest'>('csv');
+  const [selectSourceData, setSelectSourceData] = useState("");
+  const [selectValues, setSelectValues] = useState<string[]>([]);
 
   // Load columns when dialog opens
   useEffect(() => {
@@ -108,6 +121,9 @@ export function ColumnSettingsDialog({
       setSelectedColumns(new Set());
       setSearchTerm("");
       setActiveTab("header");
+      setSelectValues([]);
+      setSelectSourceData("");
+      setSelectValueSource('csv');
     }
   }, [open, gridApi]);
 
@@ -1467,7 +1483,7 @@ export function ColumnSettingsDialog({
                                   <div className="flex justify-between items-center bg-muted p-2 border-b">
                                     <span className="font-medium">Color & Conditionals</span>
                                     <Button size="sm" variant="secondary" onClick={() => {
-                                      const format = "[&gt;0][Green]\"$\"#,##0.00;[&lt;0][Red]\"$\"#,##0.00;$0.00";
+                                      const format = `[&gt;0][Green]"$"#,##0.00;[&lt;0][Red]"$"#,##0.00;$0.00`;
                                       setCustomFormatValue(format);
                                       updateColumnProperty(
                                         selectedColumn.colId || selectedColumn.field || '', 
@@ -1483,7 +1499,7 @@ export function ColumnSettingsDialog({
                                     </Button>
                                   </div>
                                   <div className="p-3 text-sm">
-                                    <div className="font-mono text-xs mb-2">[&gt;0][Green]"$"#,##0.00;[&lt;0][Red]"$"#,##0.00;$0.00</div>
+                                    <div className="font-mono text-xs mb-2">{`[&gt;0][Green]"$"#,##0.00;[&lt;0][Red]"$"#,##0.00;$0.00`}</div>
                                     <div className="flex space-x-4">
                                       <div>1234.56: <span className="text-green-500">$1,234.56</span></div>
                                       <div>-1234.56: <span className="text-red-500">$-1,234.56</span></div>
@@ -1496,7 +1512,7 @@ export function ColumnSettingsDialog({
                                   <div className="flex justify-between items-center bg-muted p-2 border-b">
                                     <span className="font-medium">Status Indicators</span>
                                     <Button size="sm" variant="secondary" onClick={() => {
-                                      const format = "[=1][Green]\"✓\";[=0][Red]\"✗\";\"N/A\"";
+                                      const format = `[=1][Green]"✓";[=0][Red]"✗";"N/A"`;
                                       setCustomFormatValue(format);
                                       updateColumnProperty(
                                         selectedColumn.colId || selectedColumn.field || '', 
@@ -1512,7 +1528,7 @@ export function ColumnSettingsDialog({
                                     </Button>
                                   </div>
                                   <div className="p-3 text-sm">
-                                    <div className="font-mono text-xs mb-2">[=1][Green]"✓";[=0][Red]"✗";"N/A"</div>
+                                    <div className="font-mono text-xs mb-2">{`[=1][Green]"✓";[=0][Red]"✗";"N/A"`}</div>
                                     <div className="flex space-x-4">
                                       <div>1: <span className="text-green-500">✓</span></div>
                                       <div>0: <span className="text-red-500">✗</span></div>
@@ -1525,7 +1541,7 @@ export function ColumnSettingsDialog({
                                   <div className="flex justify-between items-center bg-muted p-2 border-b">
                                     <span className="font-medium">Score Ranges</span>
                                     <Button size="sm" variant="secondary" onClick={() => {
-                                      const format = "[&gt;=90][#00B800]0\"%\";[&gt;=70][#007C00]0\"%\";[#FF0000]0\"%\"";
+                                      const format = `[&gt;=90][#00B800]0"%";[&gt;=70][#007C00]0"%";[#FF0000]0"%"`;
                                       setCustomFormatValue(format);
                                       updateColumnProperty(
                                         selectedColumn.colId || selectedColumn.field || '', 
@@ -1541,7 +1557,7 @@ export function ColumnSettingsDialog({
                                     </Button>
                                   </div>
                                   <div className="p-3 text-sm">
-                                    <div className="font-mono text-xs mb-2">[&gt;=90][#00B800]0"%";[&gt;=70][#007C00]0"%";[#FF0000]0"%"</div>
+                                    <div className="font-mono text-xs mb-2">{`[&gt;=90][#00B800]0"%";[&gt;=70][#007C00]0"%";[#FF0000]0"%"`}</div>
                                     <div className="flex space-x-4">
                                       <div>95: <span className="text-[#00B800]">95%</span></div>
                                       <div>75: <span className="text-[#007C00]">75%</span></div>
@@ -1554,7 +1570,7 @@ export function ColumnSettingsDialog({
                                   <div className="flex justify-between items-center bg-muted p-2 border-b">
                                     <span className="font-medium">KPI Indicators</span>
                                     <Button size="sm" variant="secondary" onClick={() => {
-                                      const format = "[&gt;100][Green]\"✓ Above Target\";[=100][Blue]\"= On Target\";[Red]\"✗ Below Target\"";
+                                      const format = `[&gt;100][Green]"✓ Above Target";[=100][Blue]"= On Target";[Red]"✗ Below Target"`;
                                       setCustomFormatValue(format);
                                       updateColumnProperty(
                                         selectedColumn.colId || selectedColumn.field || '', 
@@ -1570,7 +1586,7 @@ export function ColumnSettingsDialog({
                                     </Button>
                                   </div>
                                   <div className="p-3 text-sm">
-                                    <div className="font-mono text-xs mb-2">[&gt;100][Green]"✓ Above Target";[=100][Blue]"= On Target";[Red]"✗ Below Target"</div>
+                                    <div className="font-mono text-xs mb-2">{`[&gt;100][Green]"✓ Above Target";[=100][Blue]"= On Target";[Red]"✗ Below Target"`}</div>
                                     <div className="flex space-x-4">
                                       <div>110: <span className="text-green-500">✓ Above Target</span></div>
                                       <div>100: <span className="text-blue-500">= On Target</span></div>
@@ -1583,7 +1599,7 @@ export function ColumnSettingsDialog({
                                   <div className="flex justify-between items-center bg-muted p-2 border-b">
                                     <span className="font-medium">Simple Heatmap</span>
                                     <Button size="sm" variant="secondary" onClick={() => {
-                                      const format = "[&gt;0.7][#009900]0\"%\";[&gt;0.3][#FFCC00]0\"%\";[#FF0000]0\"%\"";
+                                      const format = `[&gt;0.7][#009900]0"%";[&gt;0.3][#FFCC00]0"%";[#FF0000]0"%"`;
                                       setCustomFormatValue(format);
                                       updateColumnProperty(
                                         selectedColumn.colId || selectedColumn.field || '', 
@@ -1599,7 +1615,7 @@ export function ColumnSettingsDialog({
                                     </Button>
                                   </div>
                                   <div className="p-3 text-sm">
-                                    <div className="font-mono text-xs mb-2">[&gt;0.7][#009900]0"%";[&gt;0.3][#FFCC00]0"%";[#FF0000]0"%"</div>
+                                    <div className="font-mono text-xs mb-2">{`[&gt;0.7][#009900]0"%";[&gt;0.3][#FFCC00]0"%";[#FF0000]0"%"`}</div>
                                     <div className="flex space-x-4">
                                       <div>0.8: <span className="text-[#009900]">80.0%</span></div>
                                       <div>0.5: <span className="text-[#FFCC00]">50.0%</span></div>
@@ -1612,7 +1628,7 @@ export function ColumnSettingsDialog({
                                   <div className="flex justify-between items-center bg-muted p-2 border-b">
                                     <span className="font-medium">Text with Values</span>
                                     <Button size="sm" variant="secondary" onClick={() => {
-                                      const format = "{value} units";
+                                      const format = `{value} units`;
                                       setCustomFormatValue(format);
                                       updateColumnProperty(
                                         selectedColumn.colId || selectedColumn.field || '', 
@@ -1628,7 +1644,7 @@ export function ColumnSettingsDialog({
                                     </Button>
                                   </div>
                                   <div className="p-3 text-sm">
-                                    <div className="font-mono text-xs mb-2">{"{value} units"}</div>
+                                    <div className="font-mono text-xs mb-2">{`{value} units`}</div>
                                     <div>42: <span>42 units</span></div>
                                   </div>
                                 </div>
@@ -1637,7 +1653,7 @@ export function ColumnSettingsDialog({
                                   <div className="flex justify-between items-center bg-muted p-2 border-b">
                                     <span className="font-medium">Currency with Suffix</span>
                                     <Button size="sm" variant="secondary" onClick={() => {
-                                      const format = "\"$\"#,##0.00\" USD\"";
+                                      const format = `"$"#,##0.00" USD"`;
                                       setCustomFormatValue(format);
                                       updateColumnProperty(
                                         selectedColumn.colId || selectedColumn.field || '', 
@@ -1653,7 +1669,7 @@ export function ColumnSettingsDialog({
                                     </Button>
                                   </div>
                                   <div className="p-3 text-sm">
-                                    <div className="font-mono text-xs mb-2">"$"#,##0.00" USD"</div>
+                                    <div className="font-mono text-xs mb-2">{`"$"#,##0.00" USD"`}</div>
                                     <div>1234.56: <span>$1,234.56 USD</span></div>
                                   </div>
                                 </div>
@@ -1662,7 +1678,7 @@ export function ColumnSettingsDialog({
                                   <div className="flex justify-between items-center bg-muted p-2 border-b">
                                     <span className="font-medium">Conditional Prefix</span>
                                     <Button size="sm" variant="secondary" onClick={() => {
-                                      const format = "[&gt;0]\"Profit: \";[&lt;0]\"Loss: \";\"Break-even\"";
+                                      const format = `[&gt;0]"Profit: ";[&lt;0]"Loss: ";"Break-even"`;
                                       setCustomFormatValue(format);
                                       updateColumnProperty(
                                         selectedColumn.colId || selectedColumn.field || '', 
@@ -1678,7 +1694,7 @@ export function ColumnSettingsDialog({
                                     </Button>
                                   </div>
                                   <div className="p-3 text-sm">
-                                    <div className="font-mono text-xs mb-2">[&gt;0]"Profit: ";[&lt;0]"Loss: ";"Break-even"</div>
+                                    <div className="font-mono text-xs mb-2">{`[&gt;0]"Profit: ";[&lt;0]"Loss: ";"Break-even"`}</div>
                                     <div className="flex space-x-4">
                                       <div>100: <span>Profit: 100</span></div>
                                       <div>-50: <span>Loss: -50</span></div>
@@ -2218,12 +2234,33 @@ export function ColumnSettingsDialog({
                       <div>
                         <Label htmlFor="editor-type" className="mb-1.5 font-medium text-foreground">Editor Type</Label>
                         <Select
-                          value={selectedColumn.editable ? 'default' : 'none'}
-                          onValueChange={(value) => updateColumnProperty(
-                            selectedColumn.colId || selectedColumn.field || '', 
-                            'editable', 
-                            value !== 'none'
-                          )}
+                          value={selectedColumn.editable ? (selectedColumn.cellEditorType || 'default') : 'none'}
+                          onValueChange={(value) => {
+                            // Update editable property
+                            updateColumnProperty(
+                              selectedColumn.colId || selectedColumn.field || '', 
+                              'editable', 
+                              value !== 'none'
+                            );
+                            
+                            // If not 'none', update the editor type
+                            if (value !== 'none') {
+                              updateColumnProperty(
+                                selectedColumn.colId || selectedColumn.field || '', 
+                                'cellEditorType', 
+                                value
+                              );
+                              
+                              // Initialize select values if select type is chosen
+                              if (value === 'select') {
+                                // Initialize with existing values or empty array
+                                const initialValues = selectedColumn.cellEditorParams?.values || [];
+                                setSelectValues(initialValues);
+                                setSelectValueSource('csv');
+                                setSelectSourceData('');
+                              }
+                            }
+                          }}
                         >
                           <SelectTrigger id="editor-type">
                             <SelectValue placeholder="Select editor type" />
@@ -2237,6 +2274,127 @@ export function ColumnSettingsDialog({
                           </SelectContent>
                         </Select>
                       </div>
+                      
+                      {selectedColumn.editable && selectedColumn.cellEditorType === 'select' && (
+                        <div className="space-y-4 mt-4">
+                          <Label htmlFor="select-value-source" className="mb-1.5 font-medium text-foreground">Select Value Source</Label>
+                          <Select
+                            value={selectValueSource}
+                            onValueChange={(value: 'csv' | 'json' | 'rest') => setSelectValueSource(value)}
+                          >
+                            <SelectTrigger id="select-value-source">
+                              <SelectValue placeholder="Select value source" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="csv">CSV</SelectItem>
+                              <SelectItem value="json">JSON</SelectItem>
+                              <SelectItem value="rest">REST URL</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          
+                          {selectValueSource === 'csv' && (
+                            <div className="mt-2">
+                              <Label htmlFor="select-values-csv" className="mb-1.5 text-sm">CSV Values (comma-separated)</Label>
+                              <textarea
+                                id="select-values-csv"
+                                className="w-full min-h-[100px] p-2 border rounded-md"
+                                value={selectValues.join(',')}
+                                onChange={(e) => {
+                                  const values = e.target.value.split(',').map(v => v.trim()).filter(v => v);
+                                  setSelectValues(values);
+                                  updateColumnProperty(
+                                    selectedColumn.colId || selectedColumn.field || '',
+                                    'cellEditorParams',
+                                    {
+                                      ...selectedColumn.cellEditorParams,
+                                      values: values,
+                                      valueSource: 'csv',
+                                      valueSourceData: e.target.value
+                                    }
+                                  );
+                                }}
+                                placeholder="Enter comma-separated values, e.g.: option1,option2,option3"
+                              />
+                            </div>
+                          )}
+                          
+                          {selectValueSource === 'json' && (
+                            <div className="mt-2">
+                              <Label htmlFor="select-values-json" className="mb-1.5 text-sm">JSON Values ({`{"value":["val1","val2"]}`})</Label>
+                              <textarea
+                                id="select-values-json"
+                                className="w-full min-h-[100px] p-2 border rounded-md"
+                                value={selectSourceData || '{"value":["value1","value2"]}'}
+                                onChange={(e) => {
+                                  setSelectSourceData(e.target.value);
+                                  try {
+                                    const jsonData = JSON.parse(e.target.value);
+                                    if (jsonData && Array.isArray(jsonData.value)) {
+                                      setSelectValues(jsonData.value);
+                                      updateColumnProperty(
+                                        selectedColumn.colId || selectedColumn.field || '',
+                                        'cellEditorParams',
+                                        {
+                                          ...selectedColumn.cellEditorParams,
+                                          values: jsonData.value,
+                                          valueSource: 'json',
+                                          valueSourceData: e.target.value
+                                        }
+                                      );
+                                    }
+                                  } catch (error) {
+                                    // Invalid JSON - don't update
+                                    console.error("Invalid JSON format", error);
+                                  }
+                                }}
+                                placeholder='{"value":["option1","option2","option3"]}'
+                              />
+                            </div>
+                          )}
+                          
+                          {selectValueSource === 'rest' && (
+                            <div className="mt-2">
+                              <Label htmlFor="select-values-rest" className="mb-1.5 text-sm">REST URL (returns {`{"value":["val1","val2"]}`})</Label>
+                              <textarea
+                                id="select-values-rest"
+                                className="w-full min-h-[60px] p-2 border rounded-md"
+                                value={selectSourceData}
+                                onChange={(e) => {
+                                  setSelectSourceData(e.target.value);
+                                  updateColumnProperty(
+                                    selectedColumn.colId || selectedColumn.field || '',
+                                    'cellEditorParams',
+                                    {
+                                      ...selectedColumn.cellEditorParams,
+                                      valueSource: 'rest',
+                                      valueSourceData: e.target.value,
+                                      // For REST, we'll set a function that fetches the data at runtime
+                                      values: [] // Initial empty array, will be populated at runtime
+                                    }
+                                  );
+                                }}
+                                placeholder="https://api.example.com/options"
+                              />
+                              <p className="text-xs text-muted-foreground mt-1">
+                                The REST endpoint should return a JSON object with a "value" property containing an array of options.
+                              </p>
+                            </div>
+                          )}
+                          
+                          {selectValues.length > 0 && (
+                            <div className="mt-2 p-2 bg-muted/30 rounded-md">
+                              <Label className="text-xs font-medium">Preview:</Label>
+                              <div className="mt-1 flex flex-wrap gap-1">
+                                {selectValues.map((value, index) => (
+                                  <div key={index} className="px-2 py-1 bg-primary/10 rounded text-xs">
+                                    {value}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
