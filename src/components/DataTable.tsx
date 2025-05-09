@@ -83,7 +83,6 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
   const columnDefs = useMemo(() => {
     const inferredCols = inferColumnDefs(rowData);
     
-    // Find the country, issuer name, and instrument type columns and mark them for grouping
     return inferredCols.map(col => {
       const field = col.field?.toLowerCase();
       
@@ -105,8 +104,10 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
 
   // Handler for refreshing data
   const handleRefresh = useCallback(() => {
-    // TO DO: implement refresh logic
-  }, []);
+    if (gridApi) {
+      gridApi.refreshCells();
+    }
+  }, [gridApi]);
 
   // Handle grid ready event
   const onGridReady = useCallback((params: GridReadyEvent<any>) => {
@@ -120,10 +121,9 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
     }, 500);
   }, []);
 
-  // Method to update column definitions - AG Grid v33+ compliant
+  // Method to update column definitions
   const updateColumnDefs = useCallback((newColDefs: ColDef[]) => {
     if (gridRef.current && gridRef.current.api) {
-      // Use setGridOption method which is the recommended approach for AG Grid 33+
       gridRef.current.api.setGridOption('columnDefs', newColDefs);
     }
   }, []);
@@ -149,11 +149,31 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
           rowData={rowData}
           defaultColDef={defaultColDef}
           pagination={false}
-          rowSelection={{ mode: "multiRow" }}
+          rowSelection="multiple"
+          enableRangeSelection={true}
+          enableFillHandle={true}
+          suppressMovableColumns={false}
+          suppressDragLeaveHidesColumns={true}
           rowGroupPanelShow="always"
-          cellSelection={true}
           groupDisplayType="singleColumn"
           groupDefaultExpanded={-1}
+          // Keyboard navigation optimizations
+          suppressMoveWhenRowDragging={true}
+          navigateToNextCell={true}
+          tabToNextCell={true}
+          enterNavigatesVertically={true}
+          enterNavigatesVerticallyAfterEdit={true}
+          stopEditingWhenCellsLoseFocus={true}
+          // Performance optimizations
+          rowBuffer={20}
+          cacheQuickFilter={true}
+          suppressAnimationFrame={true}
+          suppressColumnVirtualisation={false}
+          suppressRowVirtualisation={false}
+          // Cell selection settings
+          enableCellTextSelection={true}
+          ensureDomOrder={true}
+          // Group settings
           autoGroupColumnDef={{
             headerName: "All Groups",
             minWidth: 300,
@@ -161,7 +181,6 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
               suppressCount: false,
               suppressCheckbox: true
             },
-            // Make the group column take full width for better readability
             cellRenderer: 'agGroupCellRenderer',
             flex: 1
           }}
