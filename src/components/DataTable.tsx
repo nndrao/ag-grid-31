@@ -1,4 +1,4 @@
-                                          import React, { useCallback, useState, useMemo, useRef, useEffect } from "react";
+import React, { useCallback, useState, useMemo, useRef, useEffect } from "react";
 import { ModuleRegistry, GridApi, GridReadyEvent, ColDef } from "ag-grid-community";
 import { AllEnterpriseModule } from "ag-grid-enterprise";
 import { AgGridReact } from "ag-grid-react";
@@ -8,10 +8,8 @@ import { inferColumnDefs, defaultColDef } from "../utils/gridUtils";
 import { themeQuartz } from "ag-grid-community";
 import CustomHeaderComponent from "./CustomHeaderComponent";
 
-// Register modules - correct approach for v33+
 ModuleRegistry.registerModules([AllEnterpriseModule]);
 
-// Define theme configuration for v33+
 const lightTheme = themeQuartz.withParams({
   accentColor: "#8AAAA7",
   backgroundColor: "#F7F7F7",
@@ -76,10 +74,8 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
   const [gridApi, setGridApi] = useState<GridApi<any> | null>(null);
   const gridRef = useRef<AgGridReact>(null);
   
-  // Get the appropriate theme based on the current theme
   const gridTheme = currentTheme === 'dark' ? darkTheme : lightTheme;
   
-  // Infer column definitions from row data and set groupable fields
   const columnDefs = useMemo(() => {
     const inferredCols = inferColumnDefs(rowData);
     
@@ -102,18 +98,15 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
     });
   }, [rowData]);
 
-  // Handler for refreshing data
   const handleRefresh = useCallback(() => {
     if (gridApi) {
       gridApi.refreshCells();
     }
   }, [gridApi]);
 
-  // Handle grid ready event
   const onGridReady = useCallback((params: GridReadyEvent<any>) => {
     setGridApi(params.api);
     
-    // Auto-expand all row groups
     setTimeout(() => {
       if (params.api && !params.api.isDestroyed()) {
         params.api.expandAll();
@@ -121,14 +114,12 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
     }, 500);
   }, []);
 
-  // Method to update column definitions
   const updateColumnDefs = useCallback((newColDefs: ColDef[]) => {
     if (gridRef.current && gridRef.current.api) {
       gridRef.current.api.setGridOption('columnDefs', newColDefs);
     }
   }, []);
 
-  // Expose the updateColumnDefs method through the gridApi
   useEffect(() => {
     if (gridApi) {
       (gridApi as any).updateColumnDefs = updateColumnDefs;
@@ -157,23 +148,24 @@ const DataTable: React.FC<DataTableProps> = ({ rowData = [] }) => {
           rowGroupPanelShow="always"
           groupDisplayType="singleColumn"
           groupDefaultExpanded={-1}
-          // Keyboard navigation optimizations
-          suppressMoveWhenRowDragging={true}
+          // Keyboard navigation settings
           navigateToNextCell={true}
           tabToNextCell={true}
           enterNavigatesVertically={true}
           enterNavigatesVerticallyAfterEdit={true}
           stopEditingWhenCellsLoseFocus={true}
-          // Performance optimizations
+          enableCellTextSelection={true}
+          ensureDomOrder={true}
+          // Focus settings
+          suppressCellFocus={false}
+          suppressRowDeselection={false}
+          suppressMultiRangeSelection={false}
+          // Performance settings
           rowBuffer={20}
           cacheQuickFilter={true}
           suppressAnimationFrame={true}
           suppressColumnVirtualisation={false}
           suppressRowVirtualisation={false}
-          // Cell selection settings
-          enableCellTextSelection={true}
-          ensureDomOrder={true}
-          // Group settings
           autoGroupColumnDef={{
             headerName: "All Groups",
             minWidth: 300,
